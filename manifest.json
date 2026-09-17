@@ -1,0 +1,26 @@
+{
+  "manifest_version": 3,
+  "name": "Mynavi Filter",
+  "version": "0.1.0",
+  "description": "マイナビ2027・2028の企業閲覧状態をローカルで整理します。",
+  "permissions": ["storage"],
+  "content_scripts": [
+    {
+      "matches": [
+        "https://job.mynavi.jp/27/pc/*",
+        "https://job.mynavi.jp/28/pc/*"
+      ],
+      "js": [
+        "src/config.js",
+        "src/utils/mynavi-url.js",
+        "src/utils/company-id.js",
+        "src/storage/storage.js",
+        "src/content/search.js",
+        "src/content/company.js",
+        "src/content/main.js"
+      ],
+      "css": ["src/content/styles.css"],
+      "run_at": "document_idle"
+    }
+  ]
+}

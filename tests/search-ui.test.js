@@ -223,7 +223,7 @@ function createStorage({ companies = {}, settings = { hideViewed: false, hidePas
 
 const resultUrl = "https://job.mynavi.jp/27/pc/search/inc63.html";
 
-test("renders the toolbar as a right-side floating menu with hover and click toggles", async () => {
+test("renders the toolbar as a click-only right-side floating menu", async () => {
   const card = new FakeCard({ href: "/27/pc/search/corp1/outline.html", name: "Example Corp" });
   const documentRef = makeSearchDocument([card]);
   const storage = createStorage();
@@ -238,7 +238,9 @@ test("renders the toolbar as a right-side floating menu with hover and click tog
   assert.equal(toggle.getAttribute("aria-expanded"), "false");
 
   await toolbar.dispatchEvent({ type: "mouseenter" });
-  assert.equal(toggle.getAttribute("aria-expanded"), "true");
+  assert.equal(toggle.getAttribute("aria-expanded"), "false");
+  await toolbar.dispatchEvent({ type: "focusin" });
+  assert.equal(toggle.getAttribute("aria-expanded"), "false");
   await toolbar.dispatchEvent({ type: "mouseleave" });
   assert.equal(toggle.getAttribute("aria-expanded"), "false");
 

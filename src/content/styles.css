@@ -1,11 +1,10 @@
 .mynavi-filter-toolbar {
-  align-items: center;
+  align-items: flex-end;
   color: #263241;
   display: flex;
+  bottom: 32px;
   position: fixed;
   right: 14px;
-  top: 50%;
-  transform: translateY(-50%);
   z-index: 2147483640;
 }
 
@@ -53,8 +52,6 @@
   visibility: hidden;
 }
 
-.mynavi-filter-toolbar:hover .mynavi-filter-panel,
-.mynavi-filter-toolbar:focus-within .mynavi-filter-panel,
 .mynavi-filter-toolbar.is-open .mynavi-filter-panel {
   opacity: 1;
   pointer-events: auto;
@@ -63,11 +60,11 @@
 }
 
 .mynavi-filter-panel-header {
-  align-items: center;
+  align-items: stretch;
   display: flex;
+  flex-direction: column;
   flex-wrap: wrap;
-  gap: 8px 14px;
-  justify-content: space-between;
+  gap: 10px;
 }
 
 .mynavi-filter-title {
@@ -88,26 +85,34 @@
 }
 
 .mynavi-filter-summary {
+  display: grid;
   flex: 1 1 auto;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  width: 100%;
 }
 
 .mynavi-filter-settings {
+  align-items: stretch;
   border-top: 1px solid #e1e5ea;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
   padding-top: 8px;
 }
 
 .mynavi-filter-stat {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: center;
   white-space: nowrap;
 }
 
-.mynavi-filter-stat + .mynavi-filter-stat::before {
-  color: #a3a9b0;
-  content: "|";
-  margin-right: 6px;
-}
-
 .mynavi-filter-stat b {
-  margin-left: 2px;
+  font-size: 16px;
+  line-height: 1;
+  margin-left: 0;
 }
 
 .mynavi-filter-setting {
@@ -115,8 +120,10 @@
   border: 1px solid #cfd6df;
   border-radius: 999px;
   cursor: pointer;
+  justify-content: center;
   padding: 6px 10px;
   transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease;
+  width: 100%;
   white-space: nowrap;
 }
 

@@ -103,35 +103,15 @@
     append(panelHeader, title, summary);
     append(panel, panelHeader, settingsRow);
 
-    let hoverOpen = false;
     let pinnedOpen = false;
     const setOpen = (open) => {
       toolbar.classList.toggle("is-open", open);
       toggle.setAttribute("aria-expanded", String(open));
       toggle.setAttribute("aria-label", `Mynavi Filterを${open ? "閉じる" : "開く"}`);
     };
-    const syncOpen = () => setOpen(hoverOpen || pinnedOpen);
     toggle.addEventListener("click", () => {
       pinnedOpen = !pinnedOpen;
-      syncOpen();
-    });
-    toolbar.addEventListener("mouseenter", () => {
-      hoverOpen = true;
-      syncOpen();
-    });
-    toolbar.addEventListener("mouseleave", () => {
-      hoverOpen = false;
-      syncOpen();
-    });
-    toolbar.addEventListener("focusin", () => {
-      hoverOpen = true;
-      syncOpen();
-    });
-    toolbar.addEventListener("focusout", (event) => {
-      if (!toolbar.contains?.(event.relatedTarget)) {
-        hoverOpen = false;
-        syncOpen();
-      }
+      setOpen(pinnedOpen);
     });
 
     append(toolbar, toggle, panel);

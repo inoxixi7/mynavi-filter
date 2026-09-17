@@ -22,6 +22,13 @@
     hideViewed: "閲覧済みを隠す",
     hidePass: "見送り企業を隠す",
   });
+  const FILTER_LABELS = Object.freeze({
+    all: "すべて",
+    unseen: "未確認",
+    candidate: "候補",
+    viewed: "閲覧済み",
+    pass: "Pass",
+  });
 
   function reportError(message, error) {
     if (namespace.config?.DEBUG) {
@@ -34,7 +41,7 @@
     else children.forEach((child) => parent.appendChild(child));
   }
 
-  function createToolbar(documentRef, settings, onSettingChange) {
+  function createToolbar(documentRef, settings, onSettingChange, onFilterChange) {
     const toolbar = documentRef.createElement("section");
     toolbar.setAttribute("data-mynavi-filter", "toolbar");
     toolbar.classList.add("mynavi-filter-toolbar");
@@ -70,8 +77,6 @@
       item.append(label, value);
       append(summary, item);
     }
-    append(toolbar, summary);
-
     const settingsRow = documentRef.createElement("div");
     settingsRow.classList.add("mynavi-filter-settings");
     const syncSetting = (label, input, checked) => {
@@ -98,10 +103,26 @@
       append(label, input, text);
       append(settingsRow, label);
     }
+    const filtersRow = documentRef.createElement("div");
+    filtersRow.classList.add("mynavi-filter-filters");
+    for (const [filter, labelText] of Object.entries(FILTER_LABELS)) {
+      const button = documentRef.createElement("button");
+      button.type = "button";
+      button.classList.add("mynavi-filter-filter");
+      button.setAttribute("data-filter", filter);
+      button.setAttribute("aria-pressed", String(filter === "all"));
+      button.textContent = labelText;
+      button.addEventListener("click", () => {
+        Promise.resolve(onFilterChange?.(filter)).catch((error) =>
+          reportError("Filter update failed", error),
+        );
+      });
+      append(filtersRow, button);
+    }
     const panelHeader = documentRef.createElement("div");
     panelHeader.classList.add("mynavi-filter-panel-header");
     append(panelHeader, title, summary);
-    append(panel, panelHeader, settingsRow);
+    append(panel, panelHeader, filtersRow, settingsRow);
 
     let pinnedOpen = false;
     const setOpen = (open) => {
@@ -118,7 +139,7 @@
     return toolbar;
   }
 
-  function updateToolbar(toolbar, summary, settings) {
+  function updateToolbar(toolbar, summary, settings, activeFilter = "all") {
     for (const key of ["unseen", "candidate", "viewed", "pass", "hidden"]) {
       const item = toolbar.querySelector(`[data-stat="${key}"]`);
       const value = item?.querySelector?.("b");
@@ -133,15 +154,35 @@
         input.parentNode?.classList?.toggle("is-selected", checked);
       }
     }
+    const normalizedFilter = namespace.status.normalizeFilter(activeFilter);
+    for (const filter of Object.keys(FILTER_LABELS)) {
+      const button = toolbar.querySelector(`button[data-filter="${filter}"]`);
+      if (button) {
+        const selected = filter === normalizedFilter;
+        button.classList.toggle("is-selected", selected);
+        button.setAttribute("aria-pressed", String(selected));
+      }
+    }
   }
 
-  function ensureToolbar(container, documentRef, settings, onSettingChange) {
+  function ensureToolbar(
+    container,
+    documentRef,
+    settings,
+    onSettingChange,
+    onFilterChange,
+  ) {
     const host = documentRef.body || documentRef.querySelector?.("body") || container;
     const existing =
       host.querySelector?.('[data-mynavi-filter="toolbar"]') ||
       container.querySelector('[data-mynavi-filter="toolbar"]');
     if (existing) return existing;
-    const toolbar = createToolbar(documentRef, settings, onSettingChange);
+    const toolbar = createToolbar(
+      documentRef,
+      settings,
+      onSettingChange,
+      onFilterChange,
+    );
     if (typeof host.prepend === "function") host.prepend(toolbar);
     else host.insertBefore(toolbar, host.firstChild || null);
     return toolbar;
@@ -181,7 +222,7 @@
     return controls;
   }
 
-  function updateCard(card, controls, status, settings) {
+  function updateCard(card, controls, status, settings, activeFilter) {
     if (!controls) return;
     for (const button of controls.querySelectorAll("button[data-status]")) {
       const selected = button.dataset.status === status;
@@ -190,12 +231,12 @@
     }
     card.classList.toggle(
       "mynavi-filter-hidden",
-      namespace.status.shouldHide(status, settings),
+      namespace.status.shouldHideForFilter(status, settings, activeFilter),
     );
     card.setAttribute("data-mynavi-filter-status", status);
   }
 
-  function createController(documentRef, pageUrl, storage, observe) {
+  function createController(documentRef, pageUrl, storage) {
     const container = documentRef.querySelector("#contentsleft");
     const controller = {
       documentRef,
@@ -205,12 +246,15 @@
       settings: null,
       records: {},
       toolbar: null,
-      observer: null,
-      timer: null,
+      activeFilter: "all",
       cardViews: [],
       async handleSettingChange(key, value) {
         controller.settings = await storage.setSettings({ [key]: value });
         await controller.process();
+      },
+      async handleFilterChange(filter) {
+        controller.activeFilter = namespace.status.normalizeFilter(filter);
+        return controller.render();
       },
       async handleStatusClick(identity, targetStatus) {
         const currentStatus = controller.records[identity.key]?.status || "unseen";
@@ -233,10 +277,21 @@
           controller.records,
           controller.settings,
         );
-        updateToolbar(controller.toolbar, summary, controller.settings);
+        updateToolbar(
+          controller.toolbar,
+          summary,
+          controller.settings,
+          controller.activeFilter,
+        );
         for (const { card, controls, identity } of controller.cardViews) {
           const currentStatus = controller.records[identity.key]?.status || "unseen";
-          updateCard(card, controls, currentStatus, controller.settings);
+          updateCard(
+            card,
+            controls,
+            currentStatus,
+            controller.settings,
+            controller.activeFilter,
+          );
         }
         return summary;
       },
@@ -250,6 +305,7 @@
           documentRef,
           controller.settings,
           (key, value) => controller.handleSettingChange(key, value),
+          (filter) => controller.handleFilterChange(filter),
         );
         controller.cardViews = [];
         for (const card of container.querySelectorAll(CARD_SELECTOR)) {
@@ -266,19 +322,7 @@
         }
         return controller.render();
       },
-      destroy() {
-        if (controller.timer) clearTimeout(controller.timer);
-        controller.observer?.disconnect?.();
-      },
     };
-
-    if (observe && typeof root.MutationObserver === "function") {
-      controller.observer = new root.MutationObserver(() => {
-        clearTimeout(controller.timer);
-        controller.timer = setTimeout(() => controller.process(), 50);
-      });
-      controller.observer.observe(container, { childList: true, subtree: true });
-    }
     return controller;
   }
 
@@ -291,7 +335,6 @@
       documentRef,
       pageUrl,
       storage,
-      options.observe !== false,
     );
     await controller.process();
     return controller;

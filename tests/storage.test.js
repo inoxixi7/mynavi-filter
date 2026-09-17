@@ -5,10 +5,14 @@ let stored = {};
 global.chrome = {
   storage: {
     local: {
-      async get(key) {
-        return Object.prototype.hasOwnProperty.call(stored, key)
-          ? { [key]: structuredClone(stored[key]) }
-          : {};
+      async get(keys) {
+        if (keys === null || keys === undefined) return structuredClone(stored);
+        const requested = Array.isArray(keys) ? keys : [keys];
+        return Object.fromEntries(
+          requested
+            .filter((key) => Object.prototype.hasOwnProperty.call(stored, key))
+            .map((key) => [key, structuredClone(stored[key])]),
+        );
       },
       async set(values) {
         stored = { ...stored, ...structuredClone(values) };
@@ -35,14 +39,11 @@ test("returns default settings without writing state", async () => {
 });
 
 test("normalizes malformed or unknown stored settings", async () => {
-  stored.mynaviFilter = {
-    schemaVersion: 0,
-    companies: null,
-    settings: {
-      hideViewed: "yes",
-      hidePass: false,
-      unknown: true,
-    },
+  stored["mynaviFilter:schemaVersion"] = 0;
+  stored["mynaviFilter:settings"] = {
+    hideViewed: "yes",
+    hidePass: false,
+    unknown: true,
   };
 
   assert.deepEqual(await storage.getSettings(), {
@@ -64,41 +65,83 @@ test("stores the same company independently by year", async () => {
   assert.deepEqual(Object.keys(await storage.getCompaniesForYear("27")), [
     "27:66450",
   ]);
+  assert.equal(stored["mynaviFilter:schemaVersion"], 1);
 });
 
-test("preserves firstSeenAt and existing metadata across status changes", async () => {
-  const initial = await storage.setCompanyStatus("27", "66450", "viewed", {
+test("writes createdAt and updatedAt without inventing a viewed timestamp", async () => {
+  const initial = await storage.setCompanyStatus("27", "66450", "candidate", {
     name: "Example Corp",
   });
-  const updated = await storage.setCompanyStatus("27", "66450", "candidate");
+  const updated = await storage.setCompanyStatus("27", "66450", "pass");
 
-  assert.equal(updated.firstSeenAt, initial.firstSeenAt);
+  assert.match(initial.createdAt, /^\d{4}-\d{2}-\d{2}T/);
+  assert.equal(initial.updatedAt, initial.createdAt);
+  assert.equal(initial.lastViewedAt, undefined);
+  assert.equal(updated.createdAt, initial.createdAt);
   assert.equal(updated.name, "Example Corp");
-  assert.equal(updated.status, "candidate");
-  assert.match(updated.lastSeenAt, /^\d{4}-\d{2}-\d{2}T/);
-  assert.equal(updated.lastSeenAt, updated.updatedAt);
+  assert.equal(updated.status, "pass");
+  assert.match(updated.updatedAt, /^\d{4}-\d{2}-\d{2}T/);
+  assert.equal(updated.lastViewedAt, undefined);
+});
+
+test("updates lastViewedAt only when a company detail page is marked viewed", async () => {
+  const initial = await storage.setCompanyStatus("27", "100", "candidate", {
+    name: "New Corp",
+  });
+  const updated = await storage.setCompanyStatus("27", "100", "candidate");
+  assert.equal(updated.lastViewedAt, undefined);
+
+  const viewed = await storage.markCompanyViewed("27", "100", {
+    name: "New Corp Updated",
+  });
+  assert.equal(viewed.status, "candidate");
+  assert.equal(viewed.name, "New Corp Updated");
+  assert.match(viewed.lastViewedAt, /^\d{4}-\d{2}-\d{2}T/);
+  assert.equal(viewed.createdAt, initial.createdAt);
+  assert.equal(viewed.updatedAt, viewed.lastViewedAt);
+
+  const statusUpdated = await storage.setCompanyStatus("27", "100", "candidate");
+  assert.equal(statusUpdated.lastViewedAt, viewed.lastViewedAt);
 });
 
 test("marks unseen companies viewed without overwriting candidate or pass", async () => {
-  const first = await storage.markCompanyViewed("27", "100", {
+  const first = await storage.markCompanyViewed("27", "101", {
     name: "New Corp",
   });
   assert.equal(first.status, "viewed");
 
-  await storage.setCompanyStatus("27", "101", "candidate", {
+  await storage.setCompanyStatus("27", "102", "candidate", {
     name: "Candidate Corp",
   });
-  const candidate = await storage.markCompanyViewed("27", "101", {
+  const candidate = await storage.markCompanyViewed("27", "102", {
     name: "Candidate Corp Updated",
   });
   assert.equal(candidate.status, "candidate");
   assert.equal(candidate.name, "Candidate Corp Updated");
+  assert.match(candidate.lastViewedAt, /^\d{4}-\d{2}-\d{2}T/);
 
-  await storage.setCompanyStatus("27", "102", "pass", {
+  await storage.setCompanyStatus("27", "103", "pass", {
     name: "Passed Corp",
   });
-  const passed = await storage.markCompanyViewed("27", "102");
+  const passed = await storage.markCompanyViewed("27", "103");
   assert.equal(passed.status, "pass");
+  assert.match(passed.lastViewedAt, /^\d{4}-\d{2}-\d{2}T/);
+});
+
+test("concurrent updates for different companies do not overwrite each other", async () => {
+  const [candidate, passed] = await Promise.all([
+    storage.setCompanyStatus("27", "201", "candidate", { name: "Candidate Corp" }),
+    storage.setCompanyStatus("27", "202", "pass", { name: "Passed Corp" }),
+  ]);
+
+  assert.equal(candidate.status, "candidate");
+  assert.equal(passed.status, "pass");
+  assert.equal((await storage.getCompany("27", "201")).name, "Candidate Corp");
+  assert.equal((await storage.getCompany("27", "202")).name, "Passed Corp");
+  assert.deepEqual(Object.keys(await storage.getCompaniesForYear("27")).sort(), [
+    "27:201",
+    "27:202",
+  ]);
 });
 
 test("rejects unsupported years, malformed IDs, and unseen writes", async () => {
@@ -128,4 +171,9 @@ test("updates only recognized boolean settings", async () => {
     hideViewed: true,
     hidePass: false,
   });
+  assert.deepEqual(stored["mynaviFilter:settings"], {
+    hideViewed: true,
+    hidePass: false,
+  });
+  assert.equal(stored.mynaviFilter, undefined);
 });

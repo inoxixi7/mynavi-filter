@@ -2,7 +2,11 @@
   const namespace = (root.MynaviFilter = root.MynaviFilter || {});
   const config = Object.freeze({
     SUPPORTED_YEARS: Object.freeze(["27", "28"]),
-    STORAGE_KEY: "mynaviFilter",
+    STORAGE_KEYS: Object.freeze({
+      schemaVersion: "mynaviFilter:schemaVersion",
+      settings: "mynaviFilter:settings",
+      companyPrefix: "mynaviFilter:company:",
+    }),
     SCHEMA_VERSION: 1,
     DEFAULT_SETTINGS: Object.freeze({
       hideViewed: false,

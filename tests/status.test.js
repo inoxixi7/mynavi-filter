@@ -34,6 +34,18 @@ test("hides only viewed and pass statuses according to settings", () => {
   assert.equal(status.shouldHide("pass", { hideViewed: false, hidePass: false }), false);
 });
 
+test("specific status filters override hide settings while All uses them", () => {
+  const settings = { hideViewed: true, hidePass: true };
+
+  assert.equal(status.normalizeFilter(undefined), "all");
+  assert.equal(status.normalizeFilter("candidate"), "candidate");
+  assert.equal(status.normalizeFilter("unknown"), "all");
+  assert.equal(status.shouldHideForFilter("pass", settings, "all"), true);
+  assert.equal(status.shouldHideForFilter("pass", settings, "pass"), false);
+  assert.equal(status.shouldHideForFilter("candidate", settings, "pass"), true);
+  assert.equal(status.shouldHideForFilter("unseen", settings, "unseen"), false);
+});
+
 test("clicking a selected manual status returns the company to viewed", () => {
   assert.equal(status.resolveManualStatus("unseen", "candidate"), "candidate");
   assert.equal(status.resolveManualStatus("viewed", "candidate"), "candidate");

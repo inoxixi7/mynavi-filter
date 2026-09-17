@@ -3,40 +3,7 @@
   const config = namespace.config || require("../config.js");
   const companyIdentity = namespace.company || require("../utils/company-id.js");
   const STORED_STATUSES = new Set(["viewed", "candidate", "pass"]);
-
-  function createDefaultState() {
-    return {
-      schemaVersion: config.SCHEMA_VERSION,
-      companies: {},
-      settings: { ...config.DEFAULT_SETTINGS },
-    };
-  }
-
-  function normalizeState(value) {
-    const state = value && typeof value === "object" ? value : {};
-    const storedSettings =
-      state.settings && typeof state.settings === "object"
-        ? state.settings
-        : {};
-
-    return {
-      schemaVersion: config.SCHEMA_VERSION,
-      companies:
-        state.companies && typeof state.companies === "object"
-          ? { ...state.companies }
-          : {},
-      settings: {
-        hideViewed:
-          typeof storedSettings.hideViewed === "boolean"
-            ? storedSettings.hideViewed
-            : config.DEFAULT_SETTINGS.hideViewed,
-        hidePass:
-          typeof storedSettings.hidePass === "boolean"
-            ? storedSettings.hidePass
-            : config.DEFAULT_SETTINGS.hidePass,
-      },
-    };
-  }
+  const STORAGE_KEYS = config.STORAGE_KEYS;
 
   function getStorageArea() {
     const storageArea = root.chrome?.storage?.local;
@@ -44,17 +11,6 @@
       throw new Error("chrome.storage.local is unavailable");
     }
     return storageArea;
-  }
-
-  async function readState() {
-    const result = await getStorageArea().get(config.STORAGE_KEY);
-    return normalizeState(result[config.STORAGE_KEY]);
-  }
-
-  async function writeState(state) {
-    await getStorageArea().set({
-      [config.STORAGE_KEY]: normalizeState(state),
-    });
   }
 
   function validateIdentity(year, companyId) {
@@ -66,11 +22,29 @@
     }
   }
 
+  function companyStorageKey(year, companyId) {
+    return `${STORAGE_KEYS.companyPrefix}${companyIdentity.createCompanyKey(year, companyId)}`;
+  }
+
+  function normalizeSettings(value) {
+    const storedSettings = value && typeof value === "object" ? value : {};
+    return {
+      hideViewed:
+        typeof storedSettings.hideViewed === "boolean"
+          ? storedSettings.hideViewed
+          : config.DEFAULT_SETTINGS.hideViewed,
+      hidePass:
+        typeof storedSettings.hidePass === "boolean"
+          ? storedSettings.hidePass
+          : config.DEFAULT_SETTINGS.hidePass,
+    };
+  }
+
   async function getCompany(year, companyId) {
     validateIdentity(year, companyId);
-    const state = await readState();
-    const key = companyIdentity.createCompanyKey(String(year), String(companyId));
-    return state.companies[key] || null;
+    const key = companyStorageKey(String(year), String(companyId));
+    const result = await getStorageArea().get(key);
+    return result[key] || null;
   }
 
   async function setCompanyStatus(year, companyId, status, metadata = {}) {
@@ -81,12 +55,9 @@
 
     const normalizedYear = String(year);
     const normalizedCompanyId = String(companyId);
-    const key = companyIdentity.createCompanyKey(
-      normalizedYear,
-      normalizedCompanyId,
-    );
-    const state = await readState();
-    const existing = state.companies[key] || null;
+    const key = companyStorageKey(normalizedYear, normalizedCompanyId);
+    const result = await getStorageArea().get(key);
+    const existing = result[key] || null;
     const now = new Date().toISOString();
     const name =
       typeof metadata.name === "string" && metadata.name.trim()
@@ -97,13 +68,15 @@
       companyId: normalizedCompanyId,
       name,
       status,
-      firstSeenAt: existing?.firstSeenAt || now,
-      lastSeenAt: now,
+      createdAt: existing?.createdAt || now,
       updatedAt: now,
     };
+    if (existing?.lastViewedAt) company.lastViewedAt = existing.lastViewedAt;
 
-    state.companies[key] = company;
-    await writeState(state);
+    await getStorageArea().set({
+      [STORAGE_KEYS.schemaVersion]: config.SCHEMA_VERSION,
+      [key]: company,
+    });
     return company;
   }
 
@@ -112,12 +85,9 @@
 
     const normalizedYear = String(year);
     const normalizedCompanyId = String(companyId);
-    const key = companyIdentity.createCompanyKey(
-      normalizedYear,
-      normalizedCompanyId,
-    );
-    const state = await readState();
-    const existing = state.companies[key] || null;
+    const key = companyStorageKey(normalizedYear, normalizedCompanyId);
+    const result = await getStorageArea().get(key);
+    const existing = result[key] || null;
     const now = new Date().toISOString();
     const name =
       typeof metadata.name === "string" && metadata.name.trim()
@@ -132,13 +102,15 @@
       companyId: normalizedCompanyId,
       name,
       status,
-      firstSeenAt: existing?.firstSeenAt || now,
-      lastSeenAt: now,
+      createdAt: existing?.createdAt || now,
       updatedAt: now,
+      lastViewedAt: now,
     };
 
-    state.companies[key] = company;
-    await writeState(state);
+    await getStorageArea().set({
+      [STORAGE_KEYS.schemaVersion]: config.SCHEMA_VERSION,
+      [key]: company,
+    });
     return company;
   }
 
@@ -148,30 +120,37 @@
     }
 
     const normalizedYear = String(year);
-    const state = await readState();
+    const prefix = STORAGE_KEYS.companyPrefix;
+    const allValues = await getStorageArea().get(null);
     return Object.fromEntries(
-      Object.entries(state.companies).filter(
-        ([, company]) => company?.year === normalizedYear,
-      ),
+      Object.entries(allValues).flatMap(([key, company]) => {
+        if (!key.startsWith(prefix) || company?.year !== normalizedYear) return [];
+        const identityKey = companyIdentity.createCompanyKey(
+          company.year,
+          company.companyId,
+        );
+        return [[identityKey, company]];
+      }),
     );
   }
 
   async function getSettings() {
-    const state = await readState();
-    return { ...state.settings };
+    const result = await getStorageArea().get(STORAGE_KEYS.settings);
+    return normalizeSettings(result[STORAGE_KEYS.settings]);
   }
 
   async function setSettings(patch = {}) {
-    const state = await readState();
-
+    const current = await getSettings();
+    const settings = { ...current };
     for (const key of ["hideViewed", "hidePass"]) {
-      if (typeof patch[key] === "boolean") {
-        state.settings[key] = patch[key];
-      }
+      if (typeof patch[key] === "boolean") settings[key] = patch[key];
     }
 
-    await writeState(state);
-    return { ...state.settings };
+    await getStorageArea().set({
+      [STORAGE_KEYS.schemaVersion]: config.SCHEMA_VERSION,
+      [STORAGE_KEYS.settings]: settings,
+    });
+    return { ...settings };
   }
 
   const api = {

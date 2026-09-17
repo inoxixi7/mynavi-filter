@@ -18,6 +18,7 @@ Mynavi Filter 是一个小型 Chrome Extension，用于整理マイナビ新卒�
 - 不使用后端、账号、云同步或第三方分析 SDK。
 - 2027 与 2028 的企业状态分别保存。
 - 即使两个年度使用相同数字 ID，`27:66450` 和 `28:66450` 也属于独立记录。
+- storage 使用独立的 schema、settings 和企业记录 key；详情页访问才会更新 `lastViewedAt`。
 
 ## 加载扩展
 
@@ -68,7 +69,7 @@ mynavi-filter/
 - `src/content/search.js`：读取搜索结果企业卡片。
 - `src/content/company.js`：读取企业详情上下文。
 - `src/content/status.js`：统一状态、统计和隐藏规则。
-- `src/content/search-ui.js`：幂等注入工具栏、卡片按钮和筛选行为。
+- `src/content/search-ui.js`：一次性、幂等注入工具栏、卡片按钮和当前页状态筛选。
 - `src/content/main.js`：根据当前 URL 调用页面 adapter，并启动自动记忆/搜索增强。
 
 ## 当前明确不包含

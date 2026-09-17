@@ -100,6 +100,38 @@
   padding-top: 8px;
 }
 
+.mynavi-filter-filters {
+  display: grid;
+  gap: 4px;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.mynavi-filter-filter {
+  background: #fff;
+  border: 1px solid #cfd6df;
+  border-radius: 5px;
+  color: #4b5563;
+  cursor: pointer;
+  font: inherit;
+  font-size: 11px;
+  line-height: 1.2;
+  min-height: 28px;
+  padding: 4px 2px;
+  white-space: nowrap;
+}
+
+.mynavi-filter-filter:hover,
+.mynavi-filter-filter:focus-visible {
+  border-color: #7ba9d9;
+  outline: none;
+}
+
+.mynavi-filter-filter.is-selected {
+  background: #263241;
+  border-color: #263241;
+  color: #fff;
+}
+
 .mynavi-filter-stat {
   align-items: center;
   display: flex;

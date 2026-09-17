@@ -170,9 +170,16 @@ function matchesSelector(node, selector) {
   if (selector === "button[data-status]") {
     return node.tagName === "BUTTON" && node.dataset.status;
   }
+  if (selector === "button[data-filter]") {
+    return node.tagName === "BUTTON" && node.dataset.filter;
+  }
   const buttonStatus = selector.match(/^button\[data-status="([^"]+)"\]$/);
   if (buttonStatus) {
     return node.tagName === "BUTTON" && node.dataset.status === buttonStatus[1];
+  }
+  const filter = selector.match(/^button\[data-filter="([^"]+)"\]$/);
+  if (filter) {
+    return node.tagName === "BUTTON" && node.dataset.filter === filter[1];
   }
   const stat = selector.match(/^\[data-stat="([^"]+)"\]$/);
   if (stat) return node.dataset.stat === stat[1];
@@ -222,6 +229,30 @@ function createStorage({ companies = {}, settings = { hideViewed: false, hidePas
 }
 
 const resultUrl = "https://job.mynavi.jp/27/pc/search/inc63.html";
+
+test("does not create a MutationObserver during default search initialization", async () => {
+  const card = new FakeCard({ href: "/27/pc/search/corp1/outline.html", name: "Example Corp" });
+  const documentRef = makeSearchDocument([card]);
+  const originalMutationObserver = global.MutationObserver;
+  let constructed = 0;
+  global.MutationObserver = class {
+    constructor() {
+      constructed += 1;
+    }
+  };
+
+  try {
+    const controller = await searchUI.enhanceSearchPage(documentRef, resultUrl, {
+      storage: createStorage(),
+    });
+    assert.equal(constructed, 0);
+    assert.equal("observer" in controller, false);
+    assert.equal("timer" in controller, false);
+  } finally {
+    if (originalMutationObserver === undefined) delete global.MutationObserver;
+    else global.MutationObserver = originalMutationObserver;
+  }
+});
 
 test("renders the toolbar as a click-only right-side floating menu", async () => {
   const card = new FakeCard({ href: "/27/pc/search/corp1/outline.html", name: "Example Corp" });
@@ -331,4 +362,53 @@ test("updates storage, selected state, counts, and visibility without reload", a
   await card.querySelector('button[data-status="pass"]').click();
   assert.equal(storage.snapshot().companies["27:1"].status, "viewed");
   assert.equal(documentRef.querySelector('[data-stat="viewed"]').querySelector("b").textContent, "1");
+});
+
+test("filters the current page by status and restores All hiding rules", async () => {
+  const cards = [
+    new FakeCard({ href: "/27/pc/search/corp1/outline.html", name: "Unseen Corp" }),
+    new FakeCard({ href: "/27/pc/search/corp2/outline.html", name: "Candidate Corp" }),
+    new FakeCard({ href: "/27/pc/search/corp3/outline.html", name: "Viewed Corp" }),
+    new FakeCard({ href: "/27/pc/search/corp4/outline.html", name: "Pass Corp" }),
+  ];
+  const documentRef = makeSearchDocument(cards);
+  const storage = createStorage({
+    companies: {
+      "27:2": { year: "27", companyId: "2", name: "Candidate Corp", status: "candidate" },
+      "27:3": { year: "27", companyId: "3", name: "Viewed Corp", status: "viewed" },
+      "27:4": { year: "27", companyId: "4", name: "Pass Corp", status: "pass" },
+    },
+    settings: { hideViewed: true, hidePass: true },
+  });
+
+  const controller = await searchUI.enhanceSearchPage(documentRef, resultUrl, { storage });
+  const filter = (name) => documentRef.querySelector(`button[data-filter="${name}"]`);
+  const cardIsVisible = (card) => !card.classList.contains("mynavi-filter-hidden");
+
+  assert.equal(controller.activeFilter, "all");
+  assert.equal(documentRef.querySelectorAll("button[data-filter]").length, 5);
+  assert.equal(cardIsVisible(cards[0]), true);
+  assert.equal(cardIsVisible(cards[1]), true);
+  assert.equal(cardIsVisible(cards[2]), false);
+  assert.equal(cardIsVisible(cards[3]), false);
+  assert.equal(documentRef.querySelector('[data-stat="pass"]').querySelector("b").textContent, "1");
+
+  await filter("candidate").click();
+  assert.equal(controller.activeFilter, "candidate");
+  assert.equal(cardIsVisible(cards[0]), false);
+  assert.equal(cardIsVisible(cards[1]), true);
+  assert.equal(cardIsVisible(cards[2]), false);
+  assert.equal(cardIsVisible(cards[3]), false);
+
+  await filter("pass").click();
+  assert.equal(controller.activeFilter, "pass");
+  assert.equal(cardIsVisible(cards[3]), true);
+  assert.equal(cardIsVisible(cards[1]), false);
+
+  await filter("all").click();
+  assert.equal(controller.activeFilter, "all");
+  assert.equal(cardIsVisible(cards[0]), true);
+  assert.equal(cardIsVisible(cards[1]), true);
+  assert.equal(cardIsVisible(cards[2]), false);
+  assert.equal(cardIsVisible(cards[3]), false);
 });

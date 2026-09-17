@@ -1,6 +1,7 @@
 (function initializeStatus(root) {
   const namespace = (root.MynaviFilter = root.MynaviFilter || {});
   const VALID_STATUSES = new Set(["unseen", "viewed", "candidate", "pass"]);
+  const VALID_FILTERS = new Set(["all", "unseen", "candidate", "viewed", "pass"]);
 
   function normalizeStatus(status) {
     return VALID_STATUSES.has(status) ? status : "unseen";
@@ -12,6 +13,16 @@
       (normalized === "viewed" && settings.hideViewed === true) ||
       (normalized === "pass" && settings.hidePass === true)
     );
+  }
+
+  function normalizeFilter(filter) {
+    return VALID_FILTERS.has(filter) ? filter : "all";
+  }
+
+  function shouldHideForFilter(status, settings = {}, activeFilter = "all") {
+    const filter = normalizeFilter(activeFilter);
+    if (filter !== "all") return normalizeStatus(status) !== filter;
+    return shouldHide(status, settings);
   }
 
   function summarizeCards(cards, records = {}, settings = {}) {
@@ -32,7 +43,14 @@
     return current === target && target !== "unseen" ? "viewed" : target;
   }
 
-  const api = { normalizeStatus, shouldHide, summarizeCards, resolveManualStatus };
+  const api = {
+    normalizeStatus,
+    normalizeFilter,
+    shouldHide,
+    shouldHideForFilter,
+    summarizeCards,
+    resolveManualStatus,
+  };
   namespace.status = api;
 
   if (typeof module !== "undefined" && module.exports) {

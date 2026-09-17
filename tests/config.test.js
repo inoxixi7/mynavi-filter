@@ -5,7 +5,11 @@ test("configuration centralizes supported years and defaults", () => {
   const config = require("../src/config.js");
 
   assert.deepEqual(config.SUPPORTED_YEARS, ["27", "28"]);
-  assert.equal(config.STORAGE_KEY, "mynaviFilter");
+  assert.deepEqual(config.STORAGE_KEYS, {
+    schemaVersion: "mynaviFilter:schemaVersion",
+    settings: "mynaviFilter:settings",
+    companyPrefix: "mynaviFilter:company:",
+  });
   assert.deepEqual(config.DEFAULT_SETTINGS, {
     hideViewed: false,
     hidePass: true,

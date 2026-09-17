@@ -37,7 +37,7 @@
 - Create: `src/content/styles.css`
 - Test: `tests/config.test.js`
 
-- [ ] **Step 1: Write the failing configuration test**
+- [x] **Step 1: Write the failing configuration test**
 
 ```js
 const test = require("node:test");
@@ -56,13 +56,13 @@ test("configuration centralizes supported years and defaults", () => {
 });
 ```
 
-- [ ] **Step 2: Run the test and verify the missing module failure**
+- [x] **Step 2: Run the test and verify the missing module failure**
 
 Run: `node --test tests/config.test.js`
 
 Expected: FAIL with `Cannot find module '../src/config.js'`.
 
-- [ ] **Step 3: Implement the shared configuration namespace**
+- [x] **Step 3: Implement the shared configuration namespace**
 
 ```js
 (function initializeConfig(root) {
@@ -120,13 +120,13 @@ Create `src/content/styles.css` containing only:
 /* Reserved for Mynavi Filter-owned UI in the next milestone. */
 ```
 
-- [ ] **Step 4: Validate configuration and manifest**
+- [x] **Step 4: Validate configuration and manifest**
 
 Run: `node --test tests/config.test.js && node -e 'JSON.parse(require("node:fs").readFileSync("manifest.json", "utf8")); console.log("manifest ok")'`
 
 Expected: one passing test followed by `manifest ok`.
 
-- [ ] **Step 5: Commit the foundation metadata**
+- [x] **Step 5: Commit the foundation metadata**
 
 ```bash
 git add manifest.json src/config.js src/content/styles.css tests/config.test.js
@@ -139,7 +139,7 @@ git commit -m "chore: scaffold extension manifest"
 - Create: `src/utils/mynavi-url.js`
 - Create: `tests/mynavi-url.test.js`
 
-- [ ] **Step 1: Write URL parser tests for every verified route family**
+- [x] **Step 1: Write URL parser tests for every verified route family**
 
 ```js
 const test = require("node:test");
@@ -190,13 +190,13 @@ test("rejects other hosts and malformed company IDs", () => {
 });
 ```
 
-- [ ] **Step 2: Run tests and verify the missing module failure**
+- [x] **Step 2: Run tests and verify the missing module failure**
 
 Run: `node --test tests/mynavi-url.test.js`
 
 Expected: FAIL with `Cannot find module '../src/utils/mynavi-url.js'`.
 
-- [ ] **Step 3: Implement URL parsing without year-specific branches**
+- [x] **Step 3: Implement URL parsing without year-specific branches**
 
 ```js
 (function initializeMynaviUrl(root) {
@@ -262,13 +262,13 @@ Expected: FAIL with `Cannot find module '../src/utils/mynavi-url.js'`.
 })(globalThis);
 ```
 
-- [ ] **Step 4: Run URL tests**
+- [x] **Step 4: Run URL tests**
 
 Run: `node --test tests/mynavi-url.test.js`
 
 Expected: four passing tests.
 
-- [ ] **Step 5: Commit URL parsing**
+- [x] **Step 5: Commit URL parsing**
 
 ```bash
 git add src/utils/mynavi-url.js tests/mynavi-url.test.js
@@ -286,7 +286,7 @@ git commit -m "feat: add year-aware Mynavi URL parser"
 - Create: `tests/company-id.test.js`
 - Create: `tests/content.test.js`
 
-- [ ] **Step 1: Add dependency-free DOM fakes and failing identity tests**
+- [x] **Step 1: Add dependency-free DOM fakes and failing identity tests**
 
 `tests/helpers.js` must export small objects whose `querySelector` and `querySelectorAll` methods return explicit fixture nodes. `tests/company-id.test.js` must assert:
 
@@ -307,7 +307,7 @@ Run: `node --test tests/company-id.test.js`
 
 Expected: FAIL because `src/utils/company-id.js` does not exist.
 
-- [ ] **Step 2: Implement identity parsing**
+- [x] **Step 2: Implement identity parsing**
 
 Implement `src/utils/company-id.js` with these exact public contracts:
 
@@ -347,13 +347,13 @@ function parseCompanyPage(documentRef, pageUrl) {
 
 Wrap these functions with the same namespace/CommonJS pattern used by earlier modules, and export `extractCompanyId` by delegating to `namespace.url.extractCompanyId`.
 
-- [ ] **Step 3: Run identity tests**
+- [x] **Step 3: Run identity tests**
 
 Run: `node --test tests/company-id.test.js`
 
 Expected: all tests pass.
 
-- [ ] **Step 4: Write failing content adapter tests**
+- [x] **Step 4: Write failing content adapter tests**
 
 `tests/content.test.js` must verify that:
 
@@ -366,7 +366,7 @@ Run: `node --test tests/content.test.js`
 
 Expected: FAIL because the content adapter modules do not exist.
 
-- [ ] **Step 5: Implement the read-only adapters and router**
+- [x] **Step 5: Implement the read-only adapters and router**
 
 `src/content/search.js`:
 
@@ -412,13 +412,13 @@ if (typeof document !== "undefined" && typeof location !== "undefined") {
 
 Wrap each file in the established namespace/CommonJS pattern and keep debug output disabled unless `config.DEBUG` is true.
 
-- [ ] **Step 6: Run identity and adapter tests**
+- [x] **Step 6: Run identity and adapter tests**
 
 Run: `node --test tests/company-id.test.js tests/content.test.js`
 
 Expected: all tests pass.
 
-- [ ] **Step 7: Commit company parsing and routing**
+- [x] **Step 7: Commit company parsing and routing**
 
 ```bash
 git add src/utils/company-id.js src/content/search.js src/content/company.js src/content/main.js tests/helpers.js tests/company-id.test.js tests/content.test.js
@@ -431,7 +431,7 @@ git commit -m "feat: add shared Mynavi page adapters"
 - Create: `src/storage/storage.js`
 - Create: `tests/storage.test.js`
 
-- [ ] **Step 1: Write storage tests with a mocked `chrome.storage.local`**
+- [x] **Step 1: Write storage tests with a mocked `chrome.storage.local`**
 
 Tests must exercise the public API and assert:
 
@@ -456,7 +456,7 @@ Run: `node --test tests/storage.test.js`
 
 Expected: FAIL because `src/storage/storage.js` does not exist.
 
-- [ ] **Step 2: Implement the storage boundary**
+- [x] **Step 2: Implement the storage boundary**
 
 Implement a single-root record under `config.STORAGE_KEY`. Normalize missing data to:
 
@@ -480,19 +480,19 @@ Implement a single-root record under `config.STORAGE_KEY`. Normalize missing dat
 
 `setSettings(patch)` must accept only boolean `hideViewed` and `hidePass` fields and return the merged settings.
 
-- [ ] **Step 3: Run storage tests**
+- [x] **Step 3: Run storage tests**
 
 Run: `node --test tests/storage.test.js`
 
 Expected: all tests pass.
 
-- [ ] **Step 4: Run the complete test suite**
+- [x] **Step 4: Run the complete test suite**
 
 Run: `node --test tests/*.test.js`
 
 Expected: all tests pass with zero failures.
 
-- [ ] **Step 5: Commit storage support**
+- [x] **Step 5: Commit storage support**
 
 ```bash
 git add src/storage/storage.js tests/storage.test.js
@@ -505,7 +505,7 @@ git commit -m "feat: add year-aware local storage adapter"
 - Create: `docs/research/mynavi-2027-2028-dom.md`
 - Create: `README.md`
 
-- [ ] **Step 1: Write the live-page research report**
+- [x] **Step 1: Write the live-page research report**
 
 Document the exact evidence from the approved design:
 
@@ -518,7 +518,7 @@ Document the exact evidence from the approved design:
 - 15/15 cross-year sampled IDs resolving to the same company, with one typography-only name difference;
 - the conclusion that storage remains year-scoped.
 
-- [ ] **Step 2: Write README usage and privacy documentation**
+- [x] **Step 2: Write README usage and privacy documentation**
 
 README must include:
 
@@ -531,13 +531,13 @@ Test: node --test tests/*.test.js
 Current milestone: read-only parsing foundation; no visible filtering UI yet
 ```
 
-- [ ] **Step 3: Check documentation for scope drift and placeholders**
+- [x] **Step 3: Check documentation for scope drift and placeholders**
 
 Run: `rg -n 'TBD|TODO|FIXME|cloud sync|analytics' README.md docs/research/mynavi-2027-2028-dom.md`
 
 Expected: no placeholders; cloud sync and analytics may appear only as explicit non-features/privacy statements.
 
-- [ ] **Step 4: Commit documentation**
+- [x] **Step 4: Commit documentation**
 
 ```bash
 git add README.md docs/research/mynavi-2027-2028-dom.md
@@ -549,7 +549,7 @@ git commit -m "docs: record verified Mynavi DOM contract"
 **Files:**
 - Modify only if validation reveals a defect in the files above.
 
-- [ ] **Step 1: Run automated validation**
+- [x] **Step 1: Run automated validation**
 
 Run:
 
@@ -561,7 +561,7 @@ git diff --check
 
 Expected: all tests pass, `manifest ok`, and `git diff --check` prints nothing.
 
-- [ ] **Step 2: Inspect permissions and year literals**
+- [x] **Step 2: Inspect permissions and year literals**
 
 Run:
 
@@ -572,11 +572,11 @@ rg -n '"27"|"28"' src
 
 Expected: no broad URL permission; the two URL patterns appear only in the manifest, and supported-year literals appear only in `src/config.js`.
 
-- [ ] **Step 3: Load the unpacked extension and verify live read-only routing**
+- [x] **Step 3: Load the unpacked extension and verify live read-only routing**
 
 In Chrome, open `chrome://extensions`, enable Developer mode, choose “Load unpacked,” and select the repository root. Confirm no manifest error. Open one verified result and detail page for each supported year and confirm that the extension context contains a non-null `MynaviFilter.runtime.pageContext` without altering Mynavi's visible DOM.
 
-- [ ] **Step 4: Record the final clean state**
+- [x] **Step 4: Record the final clean state**
 
 Run: `git status --short && git log --oneline -6`
 

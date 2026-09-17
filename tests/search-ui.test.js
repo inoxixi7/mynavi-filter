@@ -132,19 +132,22 @@ class FakeCard extends FakeElement {
   constructor({ href, name }) {
     super("div");
     this.classList.add("boxSearchresultEach", "corp");
-    this.link = {
-      childNodes: [{ textContent: name }],
-      textContent: name,
-      getAttribute(attribute) {
-        return attribute === "href" ? href : null;
-      },
-    };
+    this.link = new FakeElement("a");
+    this.link.childNodes = [{ textContent: name }];
+    this.link.textContent = name;
+    this.link.getAttribute = (attribute) =>
+      attribute === "href" ? href : FakeElement.prototype.getAttribute.call(this.link, attribute);
     const head = new FakeElement("div");
     head.classList.add("boxSearchresultEach_head");
+    this.heading = new FakeElement("h3");
+    this.heading.classList.add("withCheck");
+    this.heading.append(this.link);
+    head.append(this.heading);
     this.append(head);
   }
 
   querySelector(selector) {
+    if (selector === ".boxSearchresultEach_head h3") return this.heading;
     if (selector === ".boxSearchresultEach_head h3 a") return this.link;
     return super.querySelector(selector);
   }
@@ -243,6 +246,12 @@ test("injects an idempotent toolbar and status controls with current-page counts
   assert.equal(documentRef.querySelector('[data-stat="viewed"]').querySelector("b").textContent, "0");
   assert.equal(documentRef.querySelector('[data-stat="pass"]').querySelector("b").textContent, "1");
   assert.equal(passCard.classList.contains("mynavi-filter-hidden"), true);
+  assert.equal(passCard.querySelector('[data-mynavi-filter="controls"]').parentNode, passCard.heading);
+  assert.equal(passCard.querySelector('button[data-status="viewed"]').textContent, "✓");
+  assert.equal(passCard.querySelector('button[data-status="candidate"]').textContent, "☆");
+  assert.equal(passCard.querySelector('button[data-status="pass"]').textContent, "×");
+  assert.equal(passCard.querySelector('button[data-status="pass"]').getAttribute("aria-label"), "見送り");
+  assert.equal(passCard.querySelector('button[data-status="pass"]').getAttribute("title"), "見送り");
 
   await controller.process();
   assert.equal(documentRef.querySelectorAll('[data-mynavi-filter="toolbar"]').length, 1);

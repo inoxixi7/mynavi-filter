@@ -4,18 +4,23 @@
   const LABELS = Object.freeze({
     viewed: "閲覧済み",
     candidate: "候補",
-    pass: "Pass",
+    pass: "見送り",
+  });
+  const ICONS = Object.freeze({
+    viewed: "✓",
+    candidate: "☆",
+    pass: "×",
   });
   const STAT_LABELS = Object.freeze({
     unseen: "未確認",
     candidate: "候補",
     viewed: "閲覧済み",
-    pass: "Pass",
+    pass: "見送り",
     hidden: "非表示",
   });
   const SETTING_LABELS = Object.freeze({
     hideViewed: "閲覧済みを隠す",
-    hidePass: "Passした企業を隠す",
+    hidePass: "見送り企業を隠す",
   });
 
   function reportError(message, error) {
@@ -99,6 +104,9 @@
   }
 
   function ensureCardControls(documentRef, card, identity, onStatusClick) {
+    const heading = card.querySelector?.(".boxSearchresultEach_head h3");
+    const target = heading || card;
+    heading?.classList?.add?.("mynavi-filter-heading");
     let controls = card.querySelector('[data-mynavi-filter="controls"]');
     if (!controls) {
       controls = documentRef.createElement("div");
@@ -107,7 +115,9 @@
       for (const [status, labelText] of Object.entries(LABELS)) {
         const button = documentRef.createElement("button");
         button.type = "button";
-        button.textContent = labelText;
+        button.textContent = ICONS[status];
+        button.setAttribute("aria-label", labelText);
+        button.setAttribute("title", labelText);
         button.setAttribute("data-status", status);
         button.classList.add("mynavi-filter-status-button", `mynavi-filter-status-${status}`);
         button.addEventListener("click", (event) => {
@@ -119,7 +129,9 @@
         });
         append(controls, button);
       }
-      append(card, controls);
+      append(target, controls);
+    } else if (controls.parentNode !== target) {
+      append(target, controls);
     }
     controls.dataset.companyKey = identity.key;
     return controls;

@@ -66,6 +66,28 @@ test("uses the visible heading only when the hidden company name is absent", () 
   assert.equal(company.parseCompanyPage(documentRef, detailUrl).name, "Example Corp");
 });
 
+test("falls back to visible text when hidden or leading text is whitespace", () => {
+  const card = {
+    querySelector() {
+      return {
+        childNodes: [{ textContent: "   " }],
+        textContent: "Example Corp PICK UP",
+        getAttribute() {
+          return "/27/pc/search/corp66450/outline.html";
+        },
+      };
+    },
+  };
+  const documentRef = createCompanyDocument({
+    companyId: "66450",
+    companyName: "   ",
+    heading: " Example Corp ",
+  });
+
+  assert.equal(company.parseCompanyCard(card, resultUrl).name, "Example Corp");
+  assert.equal(company.parseCompanyPage(documentRef, detailUrl).name, "Example Corp");
+});
+
 test("rejects contradictory or incomplete detail identity", () => {
   assert.equal(
     company.parseCompanyPage(

@@ -14,6 +14,10 @@
 
   function normalizeState(value) {
     const state = value && typeof value === "object" ? value : {};
+    const storedSettings =
+      state.settings && typeof state.settings === "object"
+        ? state.settings
+        : {};
 
     return {
       schemaVersion: config.SCHEMA_VERSION,
@@ -22,10 +26,14 @@
           ? { ...state.companies }
           : {},
       settings: {
-        ...config.DEFAULT_SETTINGS,
-        ...(state.settings && typeof state.settings === "object"
-          ? state.settings
-          : {}),
+        hideViewed:
+          typeof storedSettings.hideViewed === "boolean"
+            ? storedSettings.hideViewed
+            : config.DEFAULT_SETTINGS.hideViewed,
+        hidePass:
+          typeof storedSettings.hidePass === "boolean"
+            ? storedSettings.hidePass
+            : config.DEFAULT_SETTINGS.hidePass,
       },
     };
   }

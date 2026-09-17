@@ -34,6 +34,23 @@ test("returns default settings without writing state", async () => {
   assert.deepEqual(stored, {});
 });
 
+test("normalizes malformed or unknown stored settings", async () => {
+  stored.mynaviFilter = {
+    schemaVersion: 0,
+    companies: null,
+    settings: {
+      hideViewed: "yes",
+      hidePass: false,
+      unknown: true,
+    },
+  };
+
+  assert.deepEqual(await storage.getSettings(), {
+    hideViewed: false,
+    hidePass: false,
+  });
+});
+
 test("stores the same company independently by year", async () => {
   await storage.setCompanyStatus("27", "66450", "viewed", {
     name: "Example Corp",

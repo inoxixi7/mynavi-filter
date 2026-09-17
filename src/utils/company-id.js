@@ -35,10 +35,11 @@
       return null;
     }
 
-    const firstText = link.childNodes?.[0]?.textContent;
-    const name = String(firstText || link.textContent || "")
+    const firstText = String(link.childNodes?.[0]?.textContent || "").trim();
+    const fullText = String(link.textContent || "")
       .replace(/\s*PICK UP\s*$/, "")
       .trim();
+    const name = firstText || fullText;
     if (!name) {
       return null;
     }
@@ -65,11 +66,13 @@
       return null;
     }
 
-    const name = String(
-      documentRef.querySelector('input[name="corpName"]')?.value ||
-        documentRef.querySelector("h1")?.textContent ||
-        "",
+    const hiddenName = String(
+      documentRef.querySelector('input[name="corpName"]')?.value || "",
     ).trim();
+    const headingName = String(
+      documentRef.querySelector("h1")?.textContent || "",
+    ).trim();
+    const name = hiddenName || headingName;
     if (!name) {
       return null;
     }

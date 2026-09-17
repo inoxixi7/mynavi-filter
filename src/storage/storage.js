@@ -107,6 +107,41 @@
     return company;
   }
 
+  async function markCompanyViewed(year, companyId, metadata = {}) {
+    validateIdentity(year, companyId);
+
+    const normalizedYear = String(year);
+    const normalizedCompanyId = String(companyId);
+    const key = companyIdentity.createCompanyKey(
+      normalizedYear,
+      normalizedCompanyId,
+    );
+    const state = await readState();
+    const existing = state.companies[key] || null;
+    const now = new Date().toISOString();
+    const name =
+      typeof metadata.name === "string" && metadata.name.trim()
+        ? metadata.name.trim()
+        : existing?.name || "";
+    const status =
+      existing?.status === "candidate" || existing?.status === "pass"
+        ? existing.status
+        : "viewed";
+    const company = {
+      year: normalizedYear,
+      companyId: normalizedCompanyId,
+      name,
+      status,
+      firstSeenAt: existing?.firstSeenAt || now,
+      lastSeenAt: now,
+      updatedAt: now,
+    };
+
+    state.companies[key] = company;
+    await writeState(state);
+    return company;
+  }
+
   async function getCompaniesForYear(year) {
     if (!config.SUPPORTED_YEARS.includes(String(year))) {
       throw new TypeError("Invalid or unsupported year");
@@ -142,6 +177,7 @@
   const api = {
     getCompany,
     setCompanyStatus,
+    markCompanyViewed,
     getCompaniesForYear,
     getSettings,
     setSettings,

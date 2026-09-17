@@ -79,6 +79,28 @@ test("preserves firstSeenAt and existing metadata across status changes", async 
   assert.equal(updated.lastSeenAt, updated.updatedAt);
 });
 
+test("marks unseen companies viewed without overwriting candidate or pass", async () => {
+  const first = await storage.markCompanyViewed("27", "100", {
+    name: "New Corp",
+  });
+  assert.equal(first.status, "viewed");
+
+  await storage.setCompanyStatus("27", "101", "candidate", {
+    name: "Candidate Corp",
+  });
+  const candidate = await storage.markCompanyViewed("27", "101", {
+    name: "Candidate Corp Updated",
+  });
+  assert.equal(candidate.status, "candidate");
+  assert.equal(candidate.name, "Candidate Corp Updated");
+
+  await storage.setCompanyStatus("27", "102", "pass", {
+    name: "Passed Corp",
+  });
+  const passed = await storage.markCompanyViewed("27", "102");
+  assert.equal(passed.status, "pass");
+});
+
 test("rejects unsupported years, malformed IDs, and unseen writes", async () => {
   await assert.rejects(
     storage.setCompanyStatus("29", "66450", "viewed"),

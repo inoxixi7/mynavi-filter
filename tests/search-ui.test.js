@@ -223,7 +223,7 @@ function createStorage({ companies = {}, settings = { hideViewed: false, hidePas
 
 const resultUrl = "https://job.mynavi.jp/27/pc/search/inc63.html";
 
-test("renders the toolbar as a right-side floating menu with a hover toggle", async () => {
+test("renders the toolbar as a right-side floating menu with hover and click toggles", async () => {
   const card = new FakeCard({ href: "/27/pc/search/corp1/outline.html", name: "Example Corp" });
   const documentRef = makeSearchDocument([card]);
   const storage = createStorage();
@@ -246,6 +246,29 @@ test("renders the toolbar as a right-side floating menu with a hover toggle", as
   assert.equal(toggle.getAttribute("aria-expanded"), "true");
   await toggle.click();
   assert.equal(toggle.getAttribute("aria-expanded"), "false");
+});
+
+test("shows selected styling when filter settings are clicked", async () => {
+  const card = new FakeCard({ href: "/27/pc/search/corp1/outline.html", name: "Example Corp" });
+  const documentRef = makeSearchDocument([card]);
+  const storage = createStorage({ settings: { hideViewed: false, hidePass: true } });
+
+  await searchUI.enhanceSearchPage(documentRef, resultUrl, { storage, observe: false });
+
+  const viewedInput = documentRef.querySelector('input[data-setting="hideViewed"]');
+  const viewedSetting = viewedInput.parentNode;
+  const passInput = documentRef.querySelector('input[data-setting="hidePass"]');
+  const passSetting = passInput.parentNode;
+  assert.equal(viewedSetting.classList.contains("is-selected"), false);
+  assert.equal(passSetting.classList.contains("is-selected"), true);
+
+  await viewedInput.dispatchEvent({ type: "change", target: { checked: true } });
+  assert.equal(viewedSetting.classList.contains("is-selected"), true);
+  assert.equal(viewedInput.getAttribute("aria-checked"), "true");
+
+  await passInput.dispatchEvent({ type: "change", target: { checked: false } });
+  assert.equal(passSetting.classList.contains("is-selected"), false);
+  assert.equal(passInput.getAttribute("aria-checked"), "false");
 });
 
 test("injects an idempotent toolbar and status controls with current-page counts", async () => {

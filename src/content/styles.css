@@ -46,9 +46,9 @@
   padding: 10px 12px;
   pointer-events: none;
   position: absolute;
-  right: calc(100% + 8px);
-  top: 50%;
-  transform: translate(6px, -50%);
+  right: 0;
+  bottom: calc(100% + 8px);
+  transform: translateY(6px);
   transition: opacity 140ms ease, transform 140ms ease, visibility 140ms ease;
   visibility: hidden;
 }
@@ -58,7 +58,7 @@
 .mynavi-filter-toolbar.is-open .mynavi-filter-panel {
   opacity: 1;
   pointer-events: auto;
-  transform: translate(0, -50%);
+  transform: translateY(0);
   visibility: visible;
 }
 
@@ -111,12 +111,33 @@
 }
 
 .mynavi-filter-setting {
+  background: #fff;
+  border: 1px solid #cfd6df;
+  border-radius: 999px;
   cursor: pointer;
+  padding: 6px 10px;
+  transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease;
   white-space: nowrap;
 }
 
 .mynavi-filter-setting input {
-  margin: 0;
+  height: 1px;
+  margin: -1px;
+  opacity: 0;
+  overflow: hidden;
+  position: absolute;
+  width: 1px;
+}
+
+.mynavi-filter-setting:focus-within {
+  outline: 2px solid #7ba9d9;
+  outline-offset: 2px;
+}
+
+.mynavi-filter-setting.is-selected {
+  background: #e8f0fb;
+  border-color: #6f95c0;
+  color: #244d79;
 }
 
 .mynavi-filter-controls {

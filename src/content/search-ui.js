@@ -74,18 +74,25 @@
 
     const settingsRow = documentRef.createElement("div");
     settingsRow.classList.add("mynavi-filter-settings");
+    const syncSetting = (label, input, checked) => {
+      input.checked = checked;
+      input.setAttribute("aria-checked", String(checked));
+      label.classList.toggle("is-selected", checked);
+    };
     for (const [key, labelText] of Object.entries(SETTING_LABELS)) {
       const label = documentRef.createElement("label");
       label.classList.add("mynavi-filter-setting");
       const input = documentRef.createElement("input");
       input.type = "checkbox";
-      input.checked = settings[key] === true;
       input.setAttribute("data-setting", key);
-      input.addEventListener("change", (event) =>
-        Promise.resolve(onSettingChange(key, Boolean(event.target.checked))).catch(
-          (error) => reportError("Setting update failed", error),
-        ),
-      );
+      syncSetting(label, input, settings[key] === true);
+      input.addEventListener("change", (event) => {
+        const checked = Boolean(event.target.checked);
+        syncSetting(label, input, checked);
+        Promise.resolve(onSettingChange(key, checked)).catch((error) =>
+          reportError("Setting update failed", error),
+        );
+      });
       const text = documentRef.createElement("span");
       text.textContent = labelText;
       append(label, input, text);
@@ -139,7 +146,12 @@
     }
     for (const key of Object.keys(SETTING_LABELS)) {
       const input = toolbar.querySelector(`input[data-setting="${key}"]`);
-      if (input) input.checked = settings[key] === true;
+      if (input) {
+        const checked = settings[key] === true;
+        input.checked = checked;
+        input.setAttribute("aria-checked", String(checked));
+        input.parentNode?.classList?.toggle("is-selected", checked);
+      }
     }
   }
 

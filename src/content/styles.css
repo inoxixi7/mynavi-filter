@@ -1,21 +1,79 @@
 .mynavi-filter-toolbar {
   align-items: center;
+  color: #263241;
+  display: flex;
+  position: fixed;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2147483640;
+}
+
+.mynavi-filter-toggle {
+  align-items: center;
+  background: #263241;
+  border: 1px solid #263241;
+  border-radius: 10px 0 0 10px;
+  box-shadow: 0 6px 18px rgb(38 50 65 / 20%);
+  color: #fff;
+  cursor: pointer;
+  display: inline-flex;
+  font: 700 22px/1 system-ui, sans-serif;
+  height: 52px;
+  justify-content: center;
+  padding: 0;
+  width: 38px;
+}
+
+.mynavi-filter-toggle:hover,
+.mynavi-filter-toggle:focus-visible {
+  background: #1b2735;
+  outline: 2px solid #7ba9d9;
+  outline-offset: 2px;
+}
+
+.mynavi-filter-panel {
   background: #f7f8fa;
   border: 1px solid #dfe3e8;
-  border-radius: 4px;
-  color: #333;
+  border-radius: 8px;
+  box-shadow: 0 10px 28px rgb(38 50 65 / 18%);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 280px;
+  max-width: min(360px, calc(100vw - 72px));
+  opacity: 0;
+  padding: 10px 12px;
+  pointer-events: none;
+  position: absolute;
+  right: calc(100% + 8px);
+  top: 50%;
+  transform: translate(6px, -50%);
+  transition: opacity 140ms ease, transform 140ms ease, visibility 140ms ease;
+  visibility: hidden;
+}
+
+.mynavi-filter-toolbar:hover .mynavi-filter-panel,
+.mynavi-filter-toolbar:focus-within .mynavi-filter-panel,
+.mynavi-filter-toolbar.is-open .mynavi-filter-panel {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translate(0, -50%);
+  visibility: visible;
+}
+
+.mynavi-filter-panel-header {
+  align-items: center;
   display: flex;
   flex-wrap: wrap;
   gap: 8px 14px;
-  margin: 0 0 12px;
-  padding: 8px 10px;
-  font-size: 12px;
-  line-height: 1.4;
+  justify-content: space-between;
 }
 
 .mynavi-filter-title {
   color: #222;
   font-size: 13px;
+  white-space: nowrap;
 }
 
 .mynavi-filter-summary,
@@ -25,6 +83,17 @@
   display: inline-flex;
   flex-wrap: wrap;
   gap: 6px;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.mynavi-filter-summary {
+  flex: 1 1 auto;
+}
+
+.mynavi-filter-settings {
+  border-top: 1px solid #e1e5ea;
+  padding-top: 8px;
 }
 
 .mynavi-filter-stat {

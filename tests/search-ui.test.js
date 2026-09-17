@@ -114,8 +114,9 @@ class FakeDocument extends FakeElement {
   constructor(container) {
     super("document");
     this.container = container;
-    this.children = [container];
-    container.parentNode = this;
+    this.body = new FakeElement("body");
+    this.body.append(container);
+    this.children = [this.body];
   }
 
   createElement(tagName) {
@@ -154,6 +155,8 @@ class FakeCard extends FakeElement {
 }
 
 function matchesSelector(node, selector) {
+  const classSelector = selector.match(/^\.([A-Za-z0-9_-]+)$/);
+  if (classSelector) return node.classList.contains(classSelector[1]);
   if (selector === "b") return node.tagName === "B";
   if (selector === ".boxSearchresultEach.corp") {
     return node.classList.contains("boxSearchresultEach") && node.classList.contains("corp");
@@ -219,6 +222,31 @@ function createStorage({ companies = {}, settings = { hideViewed: false, hidePas
 }
 
 const resultUrl = "https://job.mynavi.jp/27/pc/search/inc63.html";
+
+test("renders the toolbar as a right-side floating menu with a hover toggle", async () => {
+  const card = new FakeCard({ href: "/27/pc/search/corp1/outline.html", name: "Example Corp" });
+  const documentRef = makeSearchDocument([card]);
+  const storage = createStorage();
+
+  await searchUI.enhanceSearchPage(documentRef, resultUrl, { storage, observe: false });
+
+  const toolbar = documentRef.querySelector('[data-mynavi-filter="toolbar"]');
+  const toggle = toolbar.querySelector(".mynavi-filter-toggle");
+  const panel = toolbar.querySelector(".mynavi-filter-panel");
+  assert.equal(toolbar.parentNode, documentRef.body);
+  assert.equal(toggle.getAttribute("aria-controls"), panel.getAttribute("id"));
+  assert.equal(toggle.getAttribute("aria-expanded"), "false");
+
+  await toolbar.dispatchEvent({ type: "mouseenter" });
+  assert.equal(toggle.getAttribute("aria-expanded"), "true");
+  await toolbar.dispatchEvent({ type: "mouseleave" });
+  assert.equal(toggle.getAttribute("aria-expanded"), "false");
+
+  await toggle.click();
+  assert.equal(toggle.getAttribute("aria-expanded"), "true");
+  await toggle.click();
+  assert.equal(toggle.getAttribute("aria-expanded"), "false");
+});
 
 test("injects an idempotent toolbar and status controls with current-page counts", async () => {
   const unseenCard = new FakeCard({ href: "/27/pc/search/corp1/outline.html", name: "Unseen Corp" });

@@ -39,10 +39,23 @@
     toolbar.setAttribute("data-mynavi-filter", "toolbar");
     toolbar.classList.add("mynavi-filter-toolbar");
 
+    const panelId = "mynavi-filter-panel";
+    const toggle = documentRef.createElement("button");
+    toggle.type = "button";
+    toggle.classList.add("mynavi-filter-toggle");
+    toggle.textContent = "≡";
+    toggle.setAttribute("aria-controls", panelId);
+    toggle.setAttribute("aria-expanded", "false");
+    toggle.setAttribute("aria-label", "Mynavi Filterを開く");
+    toggle.setAttribute("title", "Mynavi Filter");
+
+    const panel = documentRef.createElement("div");
+    panel.classList.add("mynavi-filter-panel");
+    panel.setAttribute("id", panelId);
+
     const title = documentRef.createElement("strong");
     title.textContent = "Mynavi Filter";
     title.classList.add("mynavi-filter-title");
-    append(toolbar, title);
 
     const summary = documentRef.createElement("div");
     summary.classList.add("mynavi-filter-summary");
@@ -78,7 +91,43 @@
       append(label, input, text);
       append(settingsRow, label);
     }
-    append(toolbar, settingsRow);
+    const panelHeader = documentRef.createElement("div");
+    panelHeader.classList.add("mynavi-filter-panel-header");
+    append(panelHeader, title, summary);
+    append(panel, panelHeader, settingsRow);
+
+    let hoverOpen = false;
+    let pinnedOpen = false;
+    const setOpen = (open) => {
+      toolbar.classList.toggle("is-open", open);
+      toggle.setAttribute("aria-expanded", String(open));
+      toggle.setAttribute("aria-label", `Mynavi Filterを${open ? "閉じる" : "開く"}`);
+    };
+    const syncOpen = () => setOpen(hoverOpen || pinnedOpen);
+    toggle.addEventListener("click", () => {
+      pinnedOpen = !pinnedOpen;
+      syncOpen();
+    });
+    toolbar.addEventListener("mouseenter", () => {
+      hoverOpen = true;
+      syncOpen();
+    });
+    toolbar.addEventListener("mouseleave", () => {
+      hoverOpen = false;
+      syncOpen();
+    });
+    toolbar.addEventListener("focusin", () => {
+      hoverOpen = true;
+      syncOpen();
+    });
+    toolbar.addEventListener("focusout", (event) => {
+      if (!toolbar.contains?.(event.relatedTarget)) {
+        hoverOpen = false;
+        syncOpen();
+      }
+    });
+
+    append(toolbar, toggle, panel);
     return toolbar;
   }
 
@@ -95,11 +144,14 @@
   }
 
   function ensureToolbar(container, documentRef, settings, onSettingChange) {
-    const existing = container.querySelector('[data-mynavi-filter="toolbar"]');
+    const host = documentRef.body || documentRef.querySelector?.("body") || container;
+    const existing =
+      host.querySelector?.('[data-mynavi-filter="toolbar"]') ||
+      container.querySelector('[data-mynavi-filter="toolbar"]');
     if (existing) return existing;
     const toolbar = createToolbar(documentRef, settings, onSettingChange);
-    if (typeof container.prepend === "function") container.prepend(toolbar);
-    else container.insertBefore(toolbar, container.firstChild || null);
+    if (typeof host.prepend === "function") host.prepend(toolbar);
+    else host.insertBefore(toolbar, host.firstChild || null);
     return toolbar;
   }
 

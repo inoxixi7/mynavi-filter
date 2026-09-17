@@ -17,18 +17,41 @@
     return null;
   }
 
+  async function initializeCurrentPage(documentRef, pageUrl, options = {}) {
+    const context = routeCurrentPage(documentRef, pageUrl);
+    if (!context) return null;
+
+    const storage = options.storage || namespace.storage;
+    if (context.pageType === "company") {
+      if (!storage?.markCompanyViewed) return context.company;
+      return storage.markCompanyViewed(context.company.year, context.company.companyId, {
+        name: context.company.name,
+      });
+    }
+
+    if (context.pageType === "search-results") {
+      if (!namespace.searchUI?.enhanceSearchPage) return context;
+      return namespace.searchUI.enhanceSearchPage(documentRef, pageUrl, {
+        ...options,
+        storage,
+      });
+    }
+
+    return context;
+  }
+
   const runtime = (namespace.runtime = namespace.runtime || {});
   runtime.routeCurrentPage = routeCurrentPage;
+  runtime.initializeCurrentPage = initializeCurrentPage;
   runtime.pageContext = null;
 
   if (typeof document !== "undefined" && typeof location !== "undefined") {
-    try {
-      runtime.pageContext = routeCurrentPage(document, location.href);
-    } catch (error) {
+    runtime.pageContext = routeCurrentPage(document, location.href);
+    initializeCurrentPage(document, location.href).catch((error) => {
       if (namespace.config.DEBUG) {
-        console.debug("[Mynavi Filter] Page inspection failed", error);
+        console.debug("[Mynavi Filter] Page initialization failed", error);
       }
-    }
+    });
   }
 
   if (typeof module !== "undefined" && module.exports) {

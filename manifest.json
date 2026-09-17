@@ -17,6 +17,8 @@
         "src/storage/storage.js",
         "src/content/search.js",
         "src/content/company.js",
+        "src/content/status.js",
+        "src/content/search-ui.js",
         "src/content/main.js"
       ],
       "css": ["src/content/styles.css"],

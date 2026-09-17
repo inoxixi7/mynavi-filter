@@ -91,3 +91,32 @@ test("router selects the matching read-only adapter", () => {
   assert.equal(context.cardCount, 1);
   assert.equal(runtime.routeCurrentPage(documentRef, "https://job.mynavi.jp/28/pc/"), null);
 });
+
+test("async page initializer records a detail visit without replacing manual status", async () => {
+  const calls = [];
+  const storage = {
+    async markCompanyViewed(year, companyId, metadata) {
+      calls.push({ year, companyId, metadata });
+      return { year, companyId, name: metadata.name, status: "candidate" };
+    },
+  };
+  const context = await runtime.initializeCurrentPage(
+    createCompanyDocument({ companyId: "66450", companyName: "Example Corp" }),
+    detailUrl,
+    { storage },
+  );
+
+  assert.deepEqual(context, {
+    year: "28",
+    companyId: "66450",
+    name: "Example Corp",
+    status: "candidate",
+  });
+  assert.deepEqual(calls, [
+    {
+      year: "28",
+      companyId: "66450",
+      metadata: { name: "Example Corp" },
+    },
+  ]);
+});

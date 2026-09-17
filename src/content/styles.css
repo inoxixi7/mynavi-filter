@@ -1,1 +1,85 @@
-/* Reserved for Mynavi Filter-owned UI in the next milestone. */
+.mynavi-filter-toolbar {
+  align-items: center;
+  background: #f7f8fa;
+  border: 1px solid #dfe3e8;
+  border-radius: 4px;
+  color: #333;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  margin: 0 0 12px;
+  padding: 8px 10px;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.mynavi-filter-title {
+  color: #222;
+  font-size: 13px;
+}
+
+.mynavi-filter-summary,
+.mynavi-filter-settings,
+.mynavi-filter-setting {
+  align-items: center;
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.mynavi-filter-stat {
+  white-space: nowrap;
+}
+
+.mynavi-filter-stat + .mynavi-filter-stat::before {
+  color: #a3a9b0;
+  content: "|";
+  margin-right: 6px;
+}
+
+.mynavi-filter-stat b {
+  margin-left: 2px;
+}
+
+.mynavi-filter-setting {
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.mynavi-filter-setting input {
+  margin: 0;
+}
+
+.mynavi-filter-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.mynavi-filter-status-button {
+  background: #fff;
+  border: 1px solid #c9ced6;
+  border-radius: 3px;
+  color: #4b5563;
+  cursor: pointer;
+  font: inherit;
+  font-size: 11px;
+  line-height: 1.4;
+  padding: 2px 7px;
+}
+
+.mynavi-filter-status-button:hover {
+  border-color: #7b8794;
+}
+
+.mynavi-filter-status-button.is-selected {
+  background: #e9eef5;
+  border-color: #65758b;
+  color: #1f2937;
+  font-weight: 600;
+}
+
+.mynavi-filter-hidden {
+  display: none !important;
+}

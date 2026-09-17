@@ -2,7 +2,7 @@
 
 Mynavi Filter 是一个小型 Chrome Extension，用于整理マイナビ新卒求职网站上的企业浏览状态。
 
-当前仓库完成的是 v0.1 的只读基础框架：真实网页 URL/DOM 解析、企业身份识别、年度隔离的本地 storage，以及页面路由。卡片按钮、筛选工具栏和自动标记 `viewed` 将在下一阶段实现。
+当前仓库包含 v0.1 的核心闭环：真实网页 URL/DOM 解析、企业身份识别、年度隔离的本地 storage、详情页自动标记 `viewed`、搜索卡片状态按钮、当前页统计和即时筛选。视觉仍保持克制，后续再做 UI 精修。
 
 ## 支持范围
 
@@ -65,16 +65,14 @@ mynavi-filter/
 - `src/utils/mynavi-url.js`：识别 Mynavi、年度、页面类型和详情 URL 企业 ID。
 - `src/utils/company-id.js`：生成年度隔离 key，并解析卡片和详情页身份。
 - `src/storage/storage.js`：唯一允许调用 `chrome.storage.local` 的模块。
-- `src/content/search.js`：读取搜索结果企业卡片，不修改页面。
-- `src/content/company.js`：读取企业详情上下文，不写入状态。
-- `src/content/main.js`：根据当前 URL 调用正确的页面 adapter。
+- `src/content/search.js`：读取搜索结果企业卡片。
+- `src/content/company.js`：读取企业详情上下文。
+- `src/content/status.js`：统一状态、统计和隐藏规则。
+- `src/content/search-ui.js`：幂等注入工具栏、卡片按钮和筛选行为。
+- `src/content/main.js`：根据当前 URL 调用页面 adapter，并启动自动记忆/搜索增强。
 
 ## 当前明确不包含
 
-- 可见按钮或 toolbar
-- `viewed`、`candidate`、`pass` 的页面交互
-- 隐藏企业卡片
-- 自动把详情页记录为 `viewed`
 - popup、dashboard、登录或订阅
 - 跨年度企业状态同步
 

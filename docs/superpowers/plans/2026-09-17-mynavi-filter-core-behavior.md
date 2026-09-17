@@ -34,13 +34,13 @@
 - Modify: `tests/helpers.js`
 - Create: `tests/search-ui.test.js`
 
-- [ ] **Step 1: Add failing controller tests** covering one toolbar, one controls group per card, default `hidePass`, current-page counts, button status updates, immediate hiding, and idempotent reprocessing.
-- [ ] **Step 2: Run the new UI tests** and confirm the controller is missing.
-- [ ] **Step 3: Implement the controller** with `data-mynavi-filter` markers, `button` event handlers that do not alter original links, async storage updates, scoped `MutationObserver` debouncing, and checkbox settings shared across years.
-- [ ] **Step 4: Add restrained CSS** for the toolbar, buttons, selected state, and `.mynavi-filter-hidden { display: none !important; }`.
-- [ ] **Step 5: Add the UI script to the manifest and start it from the supported search route in `main.js`.**
-- [ ] **Step 6: Run the focused UI tests and the full suite.**
-- [ ] **Step 7: Commit** `feat: add Mynavi search filtering UI`.
+- [x] **Step 1: Add failing controller tests** covering one toolbar, one controls group per card, default `hidePass`, current-page counts, button status updates, immediate hiding, and idempotent reprocessing.
+- [x] **Step 2: Run the new UI tests** and confirm the controller is missing.
+- [x] **Step 3: Implement the controller** with `data-mynavi-filter` markers, `button` event handlers that do not alter original links, async storage updates, scoped `MutationObserver` debouncing, and checkbox settings shared across years.
+- [x] **Step 4: Add restrained CSS** for the toolbar, buttons, selected state, and `.mynavi-filter-hidden { display: none !important; }`.
+- [x] **Step 5: Add the UI script to the manifest and start it from the supported search route in `main.js`.**
+- [x] **Step 6: Run the focused UI tests and the full suite.**
+- [x] **Step 7: Commit** `feat: add Mynavi search filtering UI`.
 
 ### Task 3: Company detail integration and verification
 
@@ -49,16 +49,16 @@
 - Modify: `README.md`
 - Modify: `tests/content.test.js`
 
-- [ ] **Step 1: Add a failing router integration test** that a supported detail page invokes the viewed transition and does not overwrite candidate/pass.
-- [ ] **Step 2: Implement the async browser entry point** with error isolation and debug-only logging.
-- [ ] **Step 3: Update README scope and loading notes** to describe the first usable behavior.
-- [ ] **Step 4: Run all tests, syntax checks, manifest validation, and `git diff --check`.**
-- [ ] **Step 5: Commit** `feat: connect detail viewed tracking`.
+- [x] **Step 1: Add a failing router integration test** that a supported detail page invokes the viewed transition and does not overwrite candidate/pass.
+- [x] **Step 2: Implement the async browser entry point** with error isolation and debug-only logging.
+- [x] **Step 3: Update README scope and loading notes** to describe the first usable behavior.
+- [x] **Step 4: Run all tests, syntax checks, manifest validation, and `git diff --check`.**
+- [x] **Step 5: Commit** `feat: connect detail viewed tracking`.
 
 ### Completion checks
 
-- [ ] `node --test tests/*.test.js` passes with zero failures.
-- [ ] Every `src` and `tests` JavaScript file passes `node --check`.
-- [ ] `manifest.json` parses and contains only the existing `storage` permission.
-- [ ] No supported-year business branch is duplicated outside `SUPPORTED_YEARS`.
-- [ ] Search UI uses display hiding, not card removal, and can be re-run safely.
+- [x] `node --test tests/*.test.js` passes with zero failures.
+- [x] Every `src` and `tests` JavaScript file passes `node --check`.
+- [x] `manifest.json` parses and contains only the existing `storage` permission.
+- [x] No supported-year business branch is duplicated outside `SUPPORTED_YEARS`.
+- [x] Search UI uses display hiding, not card removal, and can be re-run safely.

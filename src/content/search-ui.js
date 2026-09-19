@@ -198,7 +198,7 @@
     heading?.classList?.add?.("mynavi-filter-heading");
     let controls = card.querySelector('[data-mynavi-filter="controls"]');
     if (!controls) {
-      controls = documentRef.createElement("div");
+      controls = documentRef.createElement("span");
       controls.setAttribute("data-mynavi-filter", "controls");
       controls.classList.add("mynavi-filter-controls");
       for (const [status, labelText] of Object.entries(LABELS)) {
@@ -300,6 +300,7 @@
           cards,
           controller.records,
           controller.settings,
+          controller.activeFilter,
         );
         updateToolbar(
           controller.toolbar,

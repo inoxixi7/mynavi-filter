@@ -9,9 +9,12 @@ const resultPages = [
   "https://job.mynavi.jp/27/pc/search/inc63.html",
   "https://job.mynavi.jp/27/pc/corpinfo/searchCorpListByGenCond/index/",
   "https://job.mynavi.jp/27/pc/corpinfo/searchCorpListByGenCond/doSpecifiedPage",
+  "https://job.mynavi.jp/27/pc/toppage/displayTopPage/doSearchSavedCond",
+
   "https://job.mynavi.jp/28/pc/search/inc63.html",
   "https://job.mynavi.jp/28/pc/corpinfo/displayCorpSearch/doSearch",
   "https://job.mynavi.jp/28/pc/corpinfo/searchCorpListByGenCond/doSpecifiedPage",
+  "https://job.mynavi.jp/28/pc/toppage/displayTopPage/doSearchSavedCond",
 ];
 
 test("recognizes every verified search-result route family", () => {

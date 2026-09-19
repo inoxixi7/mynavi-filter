@@ -6,8 +6,8 @@
     /^\/\d{2}\/pc\/search\/(?:query|inc\d+)\.html$/,
     /^\/\d{2}\/pc\/corpinfo\/searchCorpListByGenCond\/(?:index|doSpecifiedPage)\/?$/,
     /^\/\d{2}\/pc\/corpinfo\/displayCorpSearch\/doSearch\/?$/,
+    /^\/\d{2}\/pc\/toppage\/displayTopPage\/doSearchSavedCond\/?$/,
   ];
-
   function toUrl(input) {
     try {
       return new URL(input);

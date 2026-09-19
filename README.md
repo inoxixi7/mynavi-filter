@@ -1,5 +1,7 @@
 # Mynavi Filter
 
+**日本語** | [中文](README.zh-CN.md) | [English](README.en.md)
+
 **マイナビの企業検索を、もっと整理しやすく。**
 
 Mynavi Filter は、マイナビ新卒（2027・2028）の企業検索結果に「閲覧済み」「興味あり」「興味なし」の状態を追加し、見た企業や候補から外した企業を整理できる Chrome 拡張機能です。
@@ -16,14 +18,6 @@ Mynavi Filter は、マイナビ新卒（2027・2028）の企業検索結果に�
 Mynavi Filter は、マイナビ本来の検索機能を置き換えるのではなく、**検索結果を自分で整理するための小さなレイヤー**を追加します。
 
 > 現在は開発版（v0.1）です。Chrome Web Store ではまだ配布していません。
-
----
-
-## Language
-
-- 日本語（このページのメイン言語）
-- [中文](#中文)
-- [English](#english)
 
 ---
 
@@ -245,8 +239,6 @@ v0.1 では、機能を意図的に絞っています。
 
 React / Vue などのフレームワークは使用していません。
 
----
-
 ### テスト
 
 Node.js がインストールされている環境で、次のコマンドを実行できます。
@@ -261,13 +253,14 @@ JavaScript の構文確認：
 find src tests -name "*.js" -print0 | xargs -0 -n1 node --check
 ```
 
----
-
 ### ディレクトリ構成
 
 ```text
 mynavi-filter/
 ├── manifest.json
+├── README.md
+├── README.zh-CN.md
+├── README.en.md
 ├── src/
 │   ├── config.js
 │   ├── content/
@@ -354,228 +347,3 @@ mynavi-filter/
 Mynavi Filter は個人開発の非公式ツールであり、株式会社マイナビおよびマイナビ新卒の公式サービスではありません。
 
 「マイナビ」「Mynavi」などの名称・商標は、それぞれの権利者に帰属します。
-
----
-
-# 中文
-
-## 简介
-
-Mynavi Filter 是一个用于 **マイナビ2027 / 2028 PC 版** 的 Chrome 扩展，主要解决日本新卒求职时“看过的企业和不感兴趣的企业仍反复出现在搜索结果里”的问题。
-
-它不会取代 Mynavi 原本的搜索功能，而是在搜索结果上增加一层简单的整理功能。
-
-目前支持：
-
-- ✓ 已浏览
-- ☆ 感兴趣
-- × 不感兴趣
-- 隐藏已浏览企业
-- 隐藏不感兴趣企业
-- 按状态筛选当前搜索结果
-- 当前页面状态数量统计
-- 在其他标签页打开企业详情后实时同步状态
-
----
-
-## 为什么做这个插件
-
-在 Mynavi 上连续寻找企业时，很容易遇到：
-
-- 忘记某家公司之前是否已经看过
-- 已经决定不考虑的公司再次出现在新的搜索结果中
-- 想重新查看候选企业时很难快速筛出来
-- 更换搜索条件后又重复打开同一家公司
-
-Mynavi Filter 的目的就是让“搜索企业 → 查看 → 筛掉 → 保留候选”这个过程更清晰。
-
----
-
-## 支持范围
-
-- `https://job.mynavi.jp/27/pc/*`
-- `https://job.mynavi.jp/28/pc/*`
-
-2027 和 2028 的数据分别保存，不会自动跨年度同步状态。
-
----
-
-## 使用方法
-
-在企业搜索结果中：
-
-- 点击 ✓：设为“已浏览”
-- 点击 ☆：设为“感兴趣”
-- 点击 ×：设为“不感兴趣”
-
-真正打开企业详情页后，如果之前没有人工设置状态，会自动变为“已浏览”。
-
-右下角的 Mynavi Filter 菜单可以：
-
-- 查看未确认 / 感兴趣 / 已浏览 / 不感兴趣数量
-- 只显示某一种状态
-- 隐藏已浏览企业
-- 隐藏不感兴趣企业
-
-如果在新标签页打开企业详情，原搜索页也会通过 Chrome Storage 的变化通知自动更新状态和计数。
-
----
-
-## 隐私
-
-所有数据只保存在浏览器本地的 `chrome.storage.local`。
-
-目前没有：
-
-- 服务器上传
-- 用户账号
-- 云同步
-- 广告 SDK
-- 第三方统计 SDK
-
-插件主要保存企业年度、企业 ID、企业名、状态以及相关时间信息。
-
----
-
-## 安装开发版
-
-1. 下载或 clone 本仓库。
-2. 打开 `chrome://extensions`。
-3. 开启“开发者模式”。
-4. 点击“加载已解压的扩展程序”。
-5. 选择 `mynavi-filter` 根目录。
-6. 重新打开或刷新 Mynavi 2027 / 2028。
-
-项目没有 npm 依赖，也不需要 build。
-
----
-
-## 开发与测试
-
-运行测试：
-
-```bash
-node --test tests/*.test.js
-```
-
-当前使用 Manifest V3、原生 JavaScript、CSS 和 `chrome.storage.local`。
-
-详细的 Mynavi 页面结构调查见：
-
-[`docs/research/mynavi-2027-2028-dom.md`](docs/research/mynavi-2027-2028-dom.md)
-
----
-
-## 注意
-
-Mynavi Filter 是个人开发的非官方工具，与株式会社マイナビ没有官方关系。
-
-如果 Mynavi 修改网页结构，插件的部分功能可能需要同步更新。
-
----
-
-# English
-
-## Overview
-
-Mynavi Filter is a Chrome extension for the PC versions of **Mynavi 2027 and Mynavi 2028**.
-
-It helps students organize large company search results by adding lightweight local statuses:
-
-- ✓ Viewed
-- ☆ Interested
-- × Not interested
-
-The extension is designed mainly for students doing new-graduate job hunting in Japan, including international students.
-
----
-
-## Why it exists
-
-When browsing many companies on Mynavi, it is easy to:
-
-- open the same company more than once,
-- forget which companies you already checked,
-- keep seeing companies you already decided to skip,
-- lose track of companies you want to revisit.
-
-Mynavi Filter adds a simple organization layer on top of Mynavi's existing search results.
-
----
-
-## Features
-
-- Automatically marks a company as Viewed after its detail page is opened.
-- Manually mark companies as Interested or Not interested.
-- Hide Viewed companies.
-- Hide Not interested companies.
-- Filter the current result page by status.
-- Show status counts for the current result page.
-- Synchronize company status across Mynavi tabs using `chrome.storage.onChanged`.
-- Refresh stored state when returning through browser back/forward cache.
-
----
-
-## Supported pages
-
-- `https://job.mynavi.jp/27/pc/*`
-- `https://job.mynavi.jp/28/pc/*`
-
-2027 and 2028 records are stored separately.
-
----
-
-## Privacy
-
-All company status data is stored locally with `chrome.storage.local`.
-
-The current version has:
-
-- no backend,
-- no account system,
-- no cloud sync,
-- no analytics SDK,
-- no advertising SDK.
-
----
-
-## Install the development version
-
-1. Download or clone this repository.
-2. Open `chrome://extensions`.
-3. Enable **Developer mode**.
-4. Select **Load unpacked**.
-5. Choose the `mynavi-filter` repository directory.
-6. Reload a supported Mynavi page.
-
-No npm install or build step is required.
-
----
-
-## Development
-
-Run tests:
-
-```bash
-node --test tests/*.test.js
-```
-
-The extension uses:
-
-- Chrome Extension Manifest V3
-- Vanilla JavaScript
-- CSS
-- `chrome.storage.local`
-- Node.js `node:test`
-
-For details about the verified Mynavi DOM and URL structure, see:
-
-[`docs/research/mynavi-2027-2028-dom.md`](docs/research/mynavi-2027-2028-dom.md)
-
----
-
-## Disclaimer
-
-Mynavi Filter is an independent, unofficial project and is not affiliated with or endorsed by Mynavi Corporation.
-
-“Mynavi” and related names and trademarks belong to their respective owners.

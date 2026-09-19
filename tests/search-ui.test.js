@@ -114,6 +114,7 @@ class FakeDocument extends FakeElement {
   constructor(container) {
     super("document");
     this.container = container;
+    this.defaultView = new FakeElement("window");
     this.body = new FakeElement("body");
     this.body.append(container);
     this.children = [this.body];
@@ -222,10 +223,43 @@ function createStorage({ companies = {}, settings = { hideViewed: false, hidePas
       };
       return currentCompanies[key];
     },
+    setExternalCompany(key, company) {
+      if (company === undefined) delete currentCompanies[key];
+      else currentCompanies[key] = structuredClone(company);
+    },
     snapshot() {
       return { companies: structuredClone(currentCompanies), settings: { ...currentSettings } };
     },
   };
+}
+
+function createStorageChangeSource() {
+  const listeners = [];
+  return {
+    listeners,
+    addListener(listener) {
+      listeners.push(listener);
+    },
+    removeListener(listener) {
+      const index = listeners.indexOf(listener);
+      if (index >= 0) listeners.splice(index, 1);
+    },
+    async emit(changes, areaName = "local") {
+      await Promise.all(listeners.map((listener) => listener(changes, areaName)));
+    },
+  };
+}
+
+async function withStorageChangeSource(callback) {
+  const originalChrome = global.chrome;
+  const onChanged = createStorageChangeSource();
+  global.chrome = { storage: { onChanged } };
+  try {
+    return await callback(onChanged);
+  } finally {
+    if (originalChrome === undefined) delete global.chrome;
+    else global.chrome = originalChrome;
+  }
 }
 
 const resultUrl = "https://job.mynavi.jp/27/pc/search/inc63.html";
@@ -254,6 +288,168 @@ test("does not create a MutationObserver during default search initialization", 
   }
 });
 
+test("syncs a current-year viewed change and updates counts and selected state", async () => {
+  await withStorageChangeSource(async (onChanged) => {
+    const card = new FakeCard({ href: "/27/pc/search/corp1/outline.html", name: "Example Corp" });
+    const documentRef = makeSearchDocument([card]);
+    const storage = createStorage();
+    const controller = await searchUI.enhanceSearchPage(documentRef, resultUrl, { storage });
+
+    assert.equal(documentRef.querySelector('[data-stat="viewed"]').querySelector("b").textContent, "0");
+    await onChanged.emit({
+      "mynaviFilter:company:27:1": {
+        oldValue: undefined,
+        newValue: {
+          year: "27",
+          companyId: "1",
+          name: "Example Corp",
+          status: "viewed",
+          createdAt: "2026-09-17T00:00:00.000Z",
+          updatedAt: "2026-09-17T00:00:01.000Z",
+          lastViewedAt: "2026-09-17T00:00:01.000Z",
+        },
+      },
+    });
+
+    assert.equal(controller.records["27:1"].status, "viewed");
+    assert.equal(documentRef.querySelector('[data-stat="viewed"]').querySelector("b").textContent, "1");
+    assert.equal(documentRef.querySelector('[data-stat="unseen"]').querySelector("b").textContent, "0");
+    assert.equal(card.querySelector('button[data-status="viewed"]').classList.contains("is-selected"), true);
+  });
+});
+
+test("hides a card immediately when a viewed storage change arrives", async () => {
+  await withStorageChangeSource(async (onChanged) => {
+    const card = new FakeCard({ href: "/27/pc/search/corp1/outline.html", name: "Example Corp" });
+    const documentRef = makeSearchDocument([card]);
+    const storage = createStorage({ settings: { hideViewed: true, hidePass: true } });
+    await searchUI.enhanceSearchPage(documentRef, resultUrl, { storage });
+
+    await onChanged.emit({
+      "mynaviFilter:company:27:1": {
+        newValue: { year: "27", companyId: "1", name: "Example Corp", status: "viewed" },
+      },
+    });
+
+    assert.equal(card.classList.contains("mynavi-filter-hidden"), true);
+  });
+});
+
+test("syncs settings changes and re-renders the current page", async () => {
+  await withStorageChangeSource(async (onChanged) => {
+    const card = new FakeCard({ href: "/27/pc/search/corp1/outline.html", name: "Example Corp" });
+    const documentRef = makeSearchDocument([card]);
+    const storage = createStorage();
+    const controller = await searchUI.enhanceSearchPage(documentRef, resultUrl, { storage });
+
+    await onChanged.emit({
+      "mynaviFilter:settings": {
+        oldValue: { hideViewed: false, hidePass: true },
+        newValue: { hideViewed: true, hidePass: true },
+      },
+    });
+
+    assert.equal(controller.settings.hideViewed, true);
+    assert.equal(documentRef.querySelector('input[data-setting="hideViewed"]').checked, true);
+  });
+});
+
+test("ignores company changes from another Mynavi year", async () => {
+  await withStorageChangeSource(async (onChanged) => {
+    const card = new FakeCard({ href: "/27/pc/search/corp1/outline.html", name: "Example Corp" });
+    const documentRef = makeSearchDocument([card]);
+    const storage = createStorage();
+    const controller = await searchUI.enhanceSearchPage(documentRef, resultUrl, { storage });
+
+    await onChanged.emit({
+      "mynaviFilter:company:28:1": {
+        newValue: { year: "28", companyId: "1", name: "Other Year", status: "viewed" },
+      },
+    });
+
+    assert.equal(controller.records["28:1"], undefined);
+    assert.equal(documentRef.querySelector('[data-stat="viewed"]').querySelector("b").textContent, "0");
+    assert.equal(documentRef.querySelector('[data-stat="unseen"]').querySelector("b").textContent, "1");
+  });
+});
+
+test("syncs an external current-year record without changing current-page counts", async () => {
+  await withStorageChangeSource(async (onChanged) => {
+    const card = new FakeCard({ href: "/27/pc/search/corp1/outline.html", name: "Example Corp" });
+    const documentRef = makeSearchDocument([card]);
+    const storage = createStorage();
+    const controller = await searchUI.enhanceSearchPage(documentRef, resultUrl, { storage });
+
+    await onChanged.emit({
+      "mynaviFilter:company:27:99": {
+        newValue: { year: "27", companyId: "99", name: "External Corp", status: "viewed" },
+      },
+    });
+
+    assert.equal(controller.records["27:99"].status, "viewed");
+    assert.equal(documentRef.querySelector('[data-stat="viewed"]').querySelector("b").textContent, "0");
+    assert.equal(documentRef.querySelector('[data-stat="unseen"]').querySelector("b").textContent, "1");
+  });
+});
+
+test("removes a current-year record when its storage key is deleted", async () => {
+  await withStorageChangeSource(async (onChanged) => {
+    const card = new FakeCard({ href: "/27/pc/search/corp1/outline.html", name: "Example Corp" });
+    const documentRef = makeSearchDocument([card]);
+    const storage = createStorage({
+      companies: {
+        "27:1": { year: "27", companyId: "1", name: "Example Corp", status: "viewed" },
+      },
+    });
+    const controller = await searchUI.enhanceSearchPage(documentRef, resultUrl, { storage });
+
+    await onChanged.emit({
+      "mynaviFilter:company:27:1": {
+        oldValue: { year: "27", companyId: "1", name: "Example Corp", status: "viewed" },
+        newValue: undefined,
+      },
+    });
+
+    assert.equal(controller.records["27:1"], undefined);
+    assert.equal(documentRef.querySelector('[data-stat="viewed"]').querySelector("b").textContent, "0");
+    assert.equal(documentRef.querySelector('[data-stat="unseen"]').querySelector("b").textContent, "1");
+  });
+});
+
+test("reconciles records on pageshow after BFCache restoration", async () => {
+  const card = new FakeCard({ href: "/27/pc/search/corp1/outline.html", name: "Example Corp" });
+  const documentRef = makeSearchDocument([card]);
+  const storage = createStorage();
+  const controller = await searchUI.enhanceSearchPage(documentRef, resultUrl, { storage });
+
+  storage.setExternalCompany("27:1", {
+    year: "27",
+    companyId: "1",
+    name: "Example Corp",
+    status: "viewed",
+  });
+  await documentRef.defaultView.dispatchEvent({ type: "pageshow", persisted: true });
+
+  assert.equal(controller.records["27:1"].status, "viewed");
+  assert.equal(documentRef.querySelector('[data-stat="viewed"]').querySelector("b").textContent, "1");
+  assert.equal(documentRef.querySelector('[data-stat="unseen"]').querySelector("b").textContent, "0");
+});
+
+test("does not register duplicate storage listeners when process runs again", async () => {
+  await withStorageChangeSource(async (onChanged) => {
+    const card = new FakeCard({ href: "/27/pc/search/corp1/outline.html", name: "Example Corp" });
+    const documentRef = makeSearchDocument([card]);
+    const controller = await searchUI.enhanceSearchPage(documentRef, resultUrl, {
+      storage: createStorage(),
+    });
+
+    assert.equal(onChanged.listeners.length, 1);
+    await controller.process();
+    assert.equal(onChanged.listeners.length, 1);
+    assert.equal(documentRef.defaultView.listeners.get("pageshow").length, 1);
+  });
+});
+
 test("renders the toolbar as a click-only right-side floating menu", async () => {
   const card = new FakeCard({ href: "/27/pc/search/corp1/outline.html", name: "Example Corp" });
   const documentRef = makeSearchDocument([card]);
@@ -265,6 +461,7 @@ test("renders the toolbar as a click-only right-side floating menu", async () =>
   const toggle = toolbar.querySelector(".mynavi-filter-toggle");
   const panel = toolbar.querySelector(".mynavi-filter-panel");
   assert.equal(toolbar.parentNode, documentRef.body);
+  assert.equal(toggle.textContent, "🔎");
   assert.equal(toggle.getAttribute("aria-controls"), panel.getAttribute("id"));
   assert.equal(toggle.getAttribute("aria-expanded"), "false");
 
@@ -329,13 +526,23 @@ test("injects an idempotent toolbar and status controls with current-page counts
   assert.equal(documentRef.querySelector('[data-stat="candidate"]').querySelector("b").textContent, "1");
   assert.equal(documentRef.querySelector('[data-stat="viewed"]').querySelector("b").textContent, "0");
   assert.equal(documentRef.querySelector('[data-stat="pass"]').querySelector("b").textContent, "1");
+  assert.equal(documentRef.querySelector('[data-stat="candidate"]').children[0].textContent, "興味あり");
+  assert.equal(documentRef.querySelector('[data-stat="pass"]').children[0].textContent, "興味なし");
+  assert.equal(documentRef.querySelector('button[data-filter="candidate"]').textContent, "興味あり");
+  assert.equal(documentRef.querySelector('button[data-filter="pass"]').textContent, "興味なし");
+  assert.equal(
+    documentRef.querySelector('input[data-setting="hidePass"]').parentNode.children[1].textContent,
+    "興味なし企業を隠す",
+  );
   assert.equal(passCard.classList.contains("mynavi-filter-hidden"), true);
   assert.equal(passCard.querySelector('[data-mynavi-filter="controls"]').parentNode, passCard.heading);
   assert.equal(passCard.querySelector('button[data-status="viewed"]').textContent, "✓");
   assert.equal(passCard.querySelector('button[data-status="candidate"]').textContent, "☆");
   assert.equal(passCard.querySelector('button[data-status="pass"]').textContent, "×");
-  assert.equal(passCard.querySelector('button[data-status="pass"]').getAttribute("aria-label"), "見送り");
-  assert.equal(passCard.querySelector('button[data-status="pass"]').getAttribute("title"), "見送り");
+  assert.equal(passCard.querySelector('button[data-status="viewed"]').getAttribute("aria-label"), "閲覧済み");
+  assert.equal(passCard.querySelector('button[data-status="candidate"]').getAttribute("aria-label"), "興味あり");
+  assert.equal(passCard.querySelector('button[data-status="pass"]').getAttribute("aria-label"), "興味なし");
+  assert.equal(passCard.querySelector('button[data-status="pass"]').getAttribute("title"), "興味なし");
 
   await controller.process();
   assert.equal(documentRef.querySelectorAll('[data-mynavi-filter="toolbar"]').length, 1);

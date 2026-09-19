@@ -3,8 +3,8 @@
   const CARD_SELECTOR = ".boxSearchresultEach.corp";
   const LABELS = Object.freeze({
     viewed: "閲覧済み",
-    candidate: "候補",
-    pass: "見送り",
+    candidate: "興味あり",
+    pass: "興味なし",
   });
   const ICONS = Object.freeze({
     viewed: "✓",
@@ -13,22 +13,26 @@
   });
   const STAT_LABELS = Object.freeze({
     unseen: "未確認",
-    candidate: "候補",
+    candidate: "興味あり",
     viewed: "閲覧済み",
-    pass: "見送り",
+    pass: "興味なし",
     hidden: "非表示",
   });
   const SETTING_LABELS = Object.freeze({
     hideViewed: "閲覧済みを隠す",
-    hidePass: "見送り企業を隠す",
+    hidePass: "興味なし企業を隠す",
   });
   const FILTER_LABELS = Object.freeze({
     all: "すべて",
     unseen: "未確認",
-    candidate: "候補",
+    candidate: "興味あり",
     viewed: "閲覧済み",
-    pass: "Pass",
+    pass: "興味なし",
   });
+  const STORAGE_KEYS = namespace.config?.STORAGE_KEYS || {
+    settings: "mynaviFilter:settings",
+    companyPrefix: "mynaviFilter:company:",
+  };
 
   function reportError(message, error) {
     if (namespace.config?.DEBUG) {
@@ -50,7 +54,7 @@
     const toggle = documentRef.createElement("button");
     toggle.type = "button";
     toggle.classList.add("mynavi-filter-toggle");
-    toggle.textContent = "≡";
+    toggle.textContent = "🔎";
     toggle.setAttribute("aria-controls", panelId);
     toggle.setAttribute("aria-expanded", "false");
     toggle.setAttribute("aria-label", "Mynavi Filterを開く");
@@ -236,6 +240,22 @@
     card.setAttribute("data-mynavi-filter-status", status);
   }
 
+  function normalizeStorageSettings(value) {
+    const defaults = namespace.config?.DEFAULT_SETTINGS || {
+      hideViewed: false,
+      hidePass: true,
+    };
+    const settings = value && typeof value === "object" ? value : {};
+    return {
+      hideViewed:
+        typeof settings.hideViewed === "boolean"
+          ? settings.hideViewed
+          : defaults.hideViewed,
+      hidePass:
+        typeof settings.hidePass === "boolean" ? settings.hidePass : defaults.hidePass,
+    };
+  }
+
   function createController(documentRef, pageUrl, storage) {
     const container = documentRef.querySelector("#contentsleft");
     const controller = {
@@ -248,6 +268,10 @@
       toolbar: null,
       activeFilter: "all",
       cardViews: [],
+      year: null,
+      storageChangeListener: null,
+      pageshowListener: null,
+      syncListenersInstalled: false,
       async handleSettingChange(key, value) {
         controller.settings = await storage.setSettings({ [key]: value });
         await controller.process();
@@ -295,9 +319,69 @@
         }
         return summary;
       },
+      async handleStorageChange(changes, areaName) {
+        if (areaName !== "local" || !changes || typeof changes !== "object") {
+          return null;
+        }
+
+        let shouldRender = false;
+        for (const [key, change] of Object.entries(changes)) {
+          if (key === STORAGE_KEYS.settings) {
+            controller.settings = normalizeStorageSettings(change?.newValue);
+            shouldRender = true;
+            continue;
+          }
+
+          const companyPrefix = `${STORAGE_KEYS.companyPrefix}${controller.year}:`;
+          if (!controller.year || !key.startsWith(companyPrefix)) continue;
+
+          const identityKey = key.slice(STORAGE_KEYS.companyPrefix.length);
+          if (change?.newValue === undefined) {
+            delete controller.records[identityKey];
+          } else {
+            controller.records[identityKey] = change.newValue;
+          }
+          shouldRender = true;
+        }
+
+        return shouldRender ? controller.render() : null;
+      },
+      async refreshFromStorage() {
+        if (!controller.year) return null;
+        const [records, settings] = await Promise.all([
+          storage.getCompaniesForYear(controller.year),
+          storage.getSettings(),
+        ]);
+        controller.records = records;
+        controller.settings = settings;
+        return controller.render();
+      },
+      installSyncListeners() {
+        if (controller.syncListenersInstalled) return;
+        controller.syncListenersInstalled = true;
+
+        const storageChanges = root.chrome?.storage?.onChanged;
+        if (storageChanges?.addListener) {
+          controller.storageChangeListener = (changes, areaName) =>
+            controller.handleStorageChange(changes, areaName).catch((error) => {
+              reportError("Storage change sync failed", error);
+            });
+          storageChanges.addListener(controller.storageChangeListener);
+        }
+
+        const view = documentRef.defaultView || root.window;
+        if (view?.addEventListener) {
+          controller.pageshowListener = () =>
+            controller.refreshFromStorage().catch((error) => {
+              reportError("pageshow storage refresh failed", error);
+            });
+          view.addEventListener("pageshow", controller.pageshowListener);
+        }
+      },
       async process() {
         const context = namespace.search.inspectSearchPage(documentRef, pageUrl);
         if (!context || !container) return null;
+        controller.year = context.year;
         controller.settings = await storage.getSettings();
         controller.records = await storage.getCompaniesForYear(context.year);
         controller.toolbar = ensureToolbar(
@@ -320,6 +404,7 @@
           );
           controller.cardViews.push({ card, controls, identity });
         }
+        controller.installSyncListeners();
         return controller.render();
       },
     };

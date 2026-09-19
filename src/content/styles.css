@@ -1,41 +1,46 @@
 .mynavi-filter-toolbar {
   align-items: flex-end;
-  color: #263241;
+  color: #29363b;
   display: flex;
-  bottom: 32px;
+  bottom: 28px;
   position: fixed;
-  right: 14px;
+  right: 20px;
   z-index: 2147483640;
 }
 
 .mynavi-filter-toggle {
   align-items: center;
-  background: #263241;
-  border: 1px solid #263241;
-  border-radius: 10px 0 0 10px;
-  box-shadow: 0 6px 18px rgb(38 50 65 / 20%);
-  color: #fff;
+  background: #fbfaf7;
+  border: 1px solid #d9dedf;
+  border-radius: 16px;
+  box-shadow: 0 8px 22px rgb(39 54 59 / 12%), inset 0 1px 0 rgb(255 255 255 / 85%);
+  color: #287a70;
   cursor: pointer;
   display: inline-flex;
-  font: 700 22px/1 system-ui, sans-serif;
+  font: 400 22px/1 system-ui, sans-serif;
   height: 52px;
   justify-content: center;
   padding: 0;
-  width: 38px;
+  transition: background-color 140ms ease, border-color 140ms ease, box-shadow 140ms ease, transform 140ms ease;
+  width: 52px;
 }
 
 .mynavi-filter-toggle:hover,
 .mynavi-filter-toggle:focus-visible {
-  background: #1b2735;
-  outline: 2px solid #7ba9d9;
-  outline-offset: 2px;
+  background: #f1f8f6;
+  border-color: #5b9c92;
+  box-shadow: 0 11px 26px rgb(39 54 59 / 16%), inset 0 1px 0 rgb(255 255 255 / 90%);
+  color: #226c63;
+  outline: 2px solid #8bc2b9;
+  outline-offset: 3px;
+  transform: translateY(-1px);
 }
 
 .mynavi-filter-panel {
-  background: #f7f8fa;
-  border: 1px solid #dfe3e8;
-  border-radius: 8px;
-  box-shadow: 0 10px 28px rgb(38 50 65 / 18%);
+  background: #fbfaf7;
+  border: 1px solid #dddcd8;
+  border-radius: 16px;
+  box-shadow: 0 16px 36px rgb(39 45 49 / 15%);
   display: flex;
   flex-direction: column;
   gap: 8px;

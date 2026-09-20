@@ -20,7 +20,33 @@ Mynavi Filter は、マイナビ本来の検索機能を置き換えるのでは
 > 現在は開発版（v0.1）です。Chrome Web Store ではまだ配布していません。
 
 ---
+## スクリーンショット
 
+### 企業検索結果をそのまま整理
+
+企業ごとに「閲覧済み」「興味あり」「興味なし」を設定できます。
+
+![企業検索結果](assets/screenshots/search-results.png)
+
+### 状態をまとめて確認・絞り込み
+
+画面右下の Mynavi Filter から、現在の検索結果を状態別に確認できます。
+
+![フィルターパネル](assets/screenshots/filter-panel.png)
+
+### 興味のある企業だけを表示
+
+「興味あり」を選択すると、候補として残した企業だけを確認できます。
+
+![興味ありフィルター](assets/screenshots/interested-filter.png)
+
+### 不要な企業を検索結果から隠す
+
+閲覧済みや「興味なし」にした企業を非表示にして、未確認の企業探しに集中できます。
+
+![企業の非表示](assets/screenshots/hidden-companies.png)
+
+---
 ## 対応サイト
 
 現在、以下の PC 版マイナビ新卒に対応しています。

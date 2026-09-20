@@ -20,6 +20,33 @@ Mynavi Filter does not replace Mynavi's search functions. It adds a small organi
 > This is currently a development version (v0.1) and is not yet available on the Chrome Web Store.
 
 ---
+## Screenshots
+
+### Organize company search results
+
+Mark each company as Viewed, Interested, or Not interested.
+
+![Company search results](assets/screenshots/search-results.png)
+
+### Review and filter by status
+
+Use the Mynavi Filter panel to review the current result page by status.
+
+![Filter panel](assets/screenshots/filter-panel.png)
+
+### Show only companies you are interested in
+
+The Interested filter lets you focus on companies you may want to revisit or apply to.
+
+![Interested filter](assets/screenshots/interested-filter.png)
+
+### Hide companies you have already ruled out
+
+Hide Viewed or Not interested companies and focus on results you have not reviewed yet.
+
+![Hidden companies](assets/screenshots/hidden-companies.png)
+
+---
 
 ## Supported sites
 

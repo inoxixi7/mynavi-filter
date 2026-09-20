@@ -18,6 +18,33 @@ Mynavi Filter 不会替代 Mynavi 原有的搜索功能，而是在现有搜索�
 > 当前为开发版（v0.1），尚未在 Chrome Web Store 发布。
 
 ---
+## 截图
+
+### 直接整理企业搜索结果
+
+可以给每家企业设置“已浏览 / 感兴趣 / 不感兴趣”。
+
+![企业搜索结果](assets/screenshots/search-results.png)
+
+### 查看和筛选企业状态
+
+通过右下角的 Mynavi Filter，可以快速查看当前搜索结果的状态分布。
+
+![筛选面板](assets/screenshots/filter-panel.png)
+
+### 只看感兴趣的企业
+
+选择“感兴趣”后，只显示你准备继续考虑的企业。
+
+![感兴趣筛选](assets/screenshots/interested-filter.png)
+
+### 隐藏已经排除的企业
+
+可以隐藏已浏览或不感兴趣的企业，把注意力放在还没确认的企业上。
+
+![隐藏企业](assets/screenshots/hidden-companies.png)
+
+---
 
 ## 支持范围
 
